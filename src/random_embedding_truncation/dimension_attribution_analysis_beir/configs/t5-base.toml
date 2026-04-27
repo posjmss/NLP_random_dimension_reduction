@@ -1,3 +1,5 @@
 cache_dir = "./outputs/one_dim_drop/cache/t5-base"
-output_path = "./outputs/one_dim_drop/results/t5-base.json"
+output_path = "/content/drive/MyDrive/NLP_random_dimension_reduction/outputs/one_dim_drop_beir/t5-base.json"
 model_name = "sentence-transformers/sentence-t5-base"
+start_index = 0
+end_index = 5

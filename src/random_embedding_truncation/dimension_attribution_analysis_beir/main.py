@@ -35,6 +35,9 @@ class Config:
     output_path: Path
     use_dot_product: bool
     is_e5_mistral: bool
+    # [customized] Allow running attribution on only a slice of dimensions.
+    start_index: int
+    end_index: int | None
 
     @classmethod
     def from_config(cls) -> "Config":
@@ -48,6 +51,9 @@ class Config:
             Path(_config["output_path"]),
             use_dot_product=_config.get("use_dot_product", False),
             is_e5_mistral="e5-mistral" in _config["model_name"],
+            # [customized] Match the MTEB attribution script's partial-run config.
+            start_index=_config.get("start_index", 0),
+            end_index=_config.get("end_index", None),
         )
 
 
@@ -67,7 +73,10 @@ if __name__ == "__main__":
     else:
         results = {}
 
-    for dim_to_drop in range(dim_size):
+    # [customized] Use start_index/end_index when testing a small dimension range.
+    end_index = config.end_index if config.end_index else dim_size
+
+    for dim_to_drop in range(config.start_index, end_index):
         dims_to_keep = list(range(dim_size))
         del dims_to_keep[dim_to_drop]
         model = Truncator(
