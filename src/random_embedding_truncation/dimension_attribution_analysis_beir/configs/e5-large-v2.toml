@@ -1,4 +1,4 @@
-cache_dir = "./outputs/one_dim_drop/cache/e5-large"
+cache_dir = "/content/drive/MyDrive/NLP_random_dimension_reduction/outputs/one_dim_drop_beir/cache/e5-large"
 output_path = "/content/drive/MyDrive/NLP_random_dimension_reduction/outputs/one_dim_drop_beir/e5-large.json"
 model_name = "intfloat/e5-large-v2"
 start_index = 0

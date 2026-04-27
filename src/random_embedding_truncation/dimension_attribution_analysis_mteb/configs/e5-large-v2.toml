@@ -1,5 +1,5 @@
 model_name = "intfloat/e5-large-v2"
-cache_dir = "./cache/one_dim_drop_mteb/e5-large-v2"
+cache_dir = "/content/drive/MyDrive/NLP_random_dimension_reduction/outputs/one_dim_drop_mteb/cache/e5-large-v2"
 result_output_dir = "/content/drive/MyDrive/NLP_random_dimension_reduction/outputs/one_dim_drop_mteb/"
 start_index = 0
 end_index = 5
