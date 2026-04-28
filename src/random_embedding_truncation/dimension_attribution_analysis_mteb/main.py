@@ -9,19 +9,34 @@ from sentence_transformers.SentenceTransformer import SentenceTransformer
 from random_embedding_truncation.truncator import Truncator
 from random_embedding_truncation.utils import read_toml
 
+# 12 dataset
 TASK_LIST_CLASSIFICATION = [
-    "AmazonCounterfactualClassification",
-    "AmazonPolarityClassification",
-    "AmazonReviewsClassification",
-    "Banking77Classification",
-    "EmotionClassification",
-    "ImdbClassification",
-    "MassiveIntentClassification",
-    "MassiveScenarioClassification",
-    "MTOPDomainClassification",
-    "MTOPIntentClassification",
-    "ToxicConversationsClassification",
-    "TweetSentimentExtractionClassification",
+    "AmazonCounterfactualClassification",       # 12
+    "AmazonPolarityClassification",             # 6
+    "AmazonReviewsClassification",              # 7
+    "Banking77Classification",                  # 1
+    "EmotionClassification",                    # 4
+    "ImdbClassification",                       # 5
+    "MassiveIntentClassification",              # 2
+    "MassiveScenarioClassification",            # 10
+    "MTOPDomainClassification",                 # 11
+    "MTOPIntentClassification",                 # 3
+    "ToxicConversationsClassification",         # 8
+    "TweetSentimentExtractionClassification",   # 9
+]
+
+# 5 datasets
+TASK_LIST_CLASSIFICATION = [
+    "Banking77Classification",                  # 1
+    "EmotionClassification",                    # 4
+    "ImdbClassification",                       # 5
+    "MassiveIntentClassification",              # 2
+    "MTOPIntentClassification",                 # 3
+]
+
+# 1 dataset
+TASK_LIST_CLASSIFICATION = [
+    "Banking77Classification",                  # 1
 ]
 
 
@@ -74,6 +89,7 @@ if __name__ == "__main__":
     end_index = config.end_index if config.end_index else dim_size
 
     for dim_to_drop in range(config.start_index, end_index):
+        print(f"{dim_to_drop} th dimension processing...")
         dims_to_keep = list(range(dim_size))
         del dims_to_keep[dim_to_drop]
         model = Truncator(
