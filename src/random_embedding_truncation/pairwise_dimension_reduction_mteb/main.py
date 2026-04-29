@@ -30,12 +30,24 @@ TASK_LIST_CLASSIFICATION = [
 ]
 
 REDUCTION_CASES = [
-    ("only_helpful_1", "helpful_dimensions", 1),
-    ("only_helpful_5", "helpful_dimensions", 5),
-    ("only_harmful_1", "harmful_dimensions", 1),
-    ("only_harmful_5", "harmful_dimensions", 5),
+    ("only_helpful_2", "helpful_dimensions", 2),
+    ("only_helpful_4", "helpful_dimensions", 4),
+    ("only_helpful_10", "helpful_dimensions", 10),
+    ("only_helpful_20", "helpful_dimensions", 20),
+    ("only_helpful_40", "helpful_dimensions", 40),
+    ("only_helpful_100", "helpful_dimensions", 100),
+    ("only_harmful_2", "harmful_dimensions", 2),
+    ("only_harmful_4", "harmful_dimensions", 4),
+    ("only_harmful_10", "harmful_dimensions", 10),
+    ("only_harmful_20", "harmful_dimensions", 20),
+    ("only_harmful_40", "harmful_dimensions", 40),
+    ("only_harmful_100", "harmful_dimensions", 100),
     ("helpful_harmful_1_1", "helpful_harmful", 1),
+    ("helpful_harmful_2_2", "helpful_harmful", 2),
     ("helpful_harmful_5_5", "helpful_harmful", 5),
+    ("helpful_harmful_10_10", "helpful_harmful", 10),
+    ("helpful_harmful_20_20", "helpful_harmful", 20),
+    ("helpful_harmful_50_50", "helpful_harmful", 50),
 ]
 
 
