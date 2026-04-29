@@ -29,6 +29,22 @@ DATASET_NAMES = [
     "touche2020",
 ]
 
+NANOBEIR_TASKS = [
+    "NanoClimateFEVER",
+    "NanoDBPedia",
+    "NanoFEVER",
+    "NanoFiQA2018",
+    "NanoHotpotQA",
+    "NanoMSMARCO",
+    "NanoNFCorpus",
+    "NanoNQ",
+    "NanoQuoraRetrieval",
+    "NanoSCIDOCS",
+    "NanoArguAna",
+    "NanoSciFact",
+    "NanoTouche2020",
+]
+
 REDUCTION_CASES = [
     ("only_helpful_1", "helpful_dimensions", 1),
     ("only_helpful_5", "helpful_dimensions", 5),
@@ -103,6 +119,37 @@ class Config:
 def load_json(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def add_mean_metrics(metrics: dict[str, float]) -> dict[str, float]:
+    grouped_values: dict[str, list[float]] = {}
+
+    for key, value in metrics.items():
+        if key.startswith("NanoBEIR_mean_"):
+            continue
+        for task in NANOBEIR_TASKS:
+            task_prefix = f"{task}_"
+            if key.startswith(task_prefix):
+                metric_suffix = key.removeprefix(task_prefix)
+                grouped_values.setdefault(metric_suffix, []).append(value)
+                break
+
+    for metric_suffix, values in grouped_values.items():
+        if values:
+            metrics[f"NanoBEIR_mean_{metric_suffix}"] = sum(values) / len(values)
+
+    return metrics
+
+
+def flatten_numeric_metrics(result: dict[str, Any]) -> dict[str, float]:
+    metrics: dict[str, float] = {}
+
+    for key, value in result.items():
+        if isinstance(value, bool) or not isinstance(value, int | float):
+            continue
+        metrics[key] = float(value)
+
+    return metrics
 
 
 def get_dimensions_to_drop(
@@ -184,10 +231,12 @@ if __name__ == "__main__":
             batch_size=8 if config.is_e5_mistral else 32,
         )
         result = evaluator(model)
+        metrics = add_mean_metrics(flatten_numeric_metrics(result))
         results[case_name] = {
             "dimensions_to_drop": dimensions_to_drop,
             "num_dropped_dimensions": len(dimensions_to_drop),
-            "metrics": result,
+            "metrics": metrics,
+            "raw_metrics": result,
         }
         sienna.save(results, config.output_path)
         print(f"{case_name}: saved to {config.output_path}")

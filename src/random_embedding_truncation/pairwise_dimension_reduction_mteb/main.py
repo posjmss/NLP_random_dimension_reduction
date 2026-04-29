@@ -10,6 +10,10 @@ from sentence_transformers.SentenceTransformer import SentenceTransformer
 from random_embedding_truncation.dimension_attribution_analysis_mteb.main import (
     TASK_LIST_CLASSIFICATION,
 )
+from random_embedding_truncation.dimension_attribution_analysis_mteb.collect_results import (
+    add_mean_metrics,
+    collect_task_metrics,
+)
 from random_embedding_truncation.truncator import Truncator
 from random_embedding_truncation.utils import read_toml
 
@@ -163,6 +167,23 @@ def load_task_output(task_output_dir: Path) -> dict[str, Any]:
     return outputs
 
 
+def collect_case_metrics(
+    result_output_dir: Path,
+    model_slug: str,
+    case_name: str,
+    task_list: list[str],
+) -> dict[str, float]:
+    metrics: dict[str, float] = {}
+
+    for task in task_list:
+        output_folder = result_output_dir / f"{task}_{model_slug}_{case_name}"
+        if output_folder.exists():
+            metrics.update(collect_task_metrics(task, output_folder))
+
+    add_mean_metrics(metrics, task_list)
+    return metrics
+
+
 if __name__ == "__main__":
     config = Config.from_config()
 
@@ -195,9 +216,12 @@ if __name__ == "__main__":
             {
                 "dimensions_to_drop": dimensions_to_drop,
                 "num_dropped_dimensions": len(dimensions_to_drop),
+                "metrics": {},
                 "tasks": {},
             },
         )
+        case_results["dimensions_to_drop"] = dimensions_to_drop
+        case_results["num_dropped_dimensions"] = len(dimensions_to_drop)
 
         model = Truncator(
             encoder,
@@ -241,10 +265,22 @@ if __name__ == "__main__":
                     sort_keys=True,
                 )
             case_results["tasks"][task] = load_task_output(output_folder)
+            case_results["metrics"] = collect_case_metrics(
+                config.result_output_dir,
+                model_slug,
+                case_name,
+                config.task_list,
+            )
             with config.output_path.open("w", encoding="utf-8") as f:
                 json.dump(grouped_results, f, indent=2, sort_keys=True)
             print(f"  - {task}: saved to {output_folder}")
 
+        case_results["metrics"] = collect_case_metrics(
+            config.result_output_dir,
+            model_slug,
+            case_name,
+            config.task_list,
+        )
         with config.output_path.open("w", encoding="utf-8") as f:
             json.dump(grouped_results, f, indent=2, sort_keys=True)
         print(f"{case_name}: grouped result saved to {config.output_path}")
