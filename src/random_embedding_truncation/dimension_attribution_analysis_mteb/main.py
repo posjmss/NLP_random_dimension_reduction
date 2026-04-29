@@ -25,21 +25,6 @@ TASK_LIST_CLASSIFICATION = [
     "TweetSentimentExtractionClassification",   # 9
 ]
 
-# 5 datasets
-TASK_LIST_CLASSIFICATION = [
-    "Banking77Classification",                  # 1
-    "EmotionClassification",                    # 4
-    "ImdbClassification",                       # 5
-    "MassiveIntentClassification",              # 2
-    "MTOPIntentClassification",                 # 3
-]
-
-# 1 dataset
-TASK_LIST_CLASSIFICATION = [
-    "Banking77Classification",                  # 1
-]
-
-
 @dataclass
 class Config:
     model_name: str

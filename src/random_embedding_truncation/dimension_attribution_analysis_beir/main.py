@@ -11,7 +11,7 @@ from sentence_transformers.util import cos_sim, dot_score
 from random_embedding_truncation.truncator import Truncator, task_name_to_instruct
 from random_embedding_truncation.utils import read_toml
 
-# full use
+
 DATASET_NAMES = [
     "climatefever",   # 9
     "dbpedia",        # 6
@@ -26,20 +26,6 @@ DATASET_NAMES = [
     "arguana",        # 10
     "scifact",        # 8
     "touche2020",     # 12
-]
-
-# 5 datasets
-DATASET_NAMES = [
-    "fiqa2018",       # 4
-    "hotpotqa",       # 3
-    "msmarco",        # 1
-    "nq",             # 2
-    "scidocs",        # 5
-]
-
-# 1 dataset
-DATASET_NAMES = [
-    "msmarco",        # 1
 ]
 
 

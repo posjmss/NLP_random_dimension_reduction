@@ -1,5 +1,4 @@
 import json
-import logging
 from argparse import ArgumentParser
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,18 +14,18 @@ from random_embedding_truncation.dimension_attribution_analysis_mteb.collect_res
 from random_embedding_truncation.utils import read_toml
 
 TASK_LIST_CLASSIFICATION = [
-    "AmazonCounterfactualClassification",
-    "AmazonPolarityClassification",
-    "AmazonReviewsClassification",
-    "Banking77Classification",
-    "EmotionClassification",
-    "ImdbClassification",
-    "MassiveIntentClassification",
-    "MassiveScenarioClassification",
-    "MTOPDomainClassification",
-    "MTOPIntentClassification",
-    "ToxicConversationsClassification",
-    "TweetSentimentExtractionClassification",
+    "AmazonCounterfactualClassification",       # 12
+    "AmazonPolarityClassification",             # 6
+    "AmazonReviewsClassification",              # 7
+    "Banking77Classification",                  # 1
+    "EmotionClassification",                    # 4
+    "ImdbClassification",                       # 5
+    "MassiveIntentClassification",              # 2
+    "MassiveScenarioClassification",            # 10
+    "MTOPDomainClassification",                 # 11
+    "MTOPIntentClassification",                 # 3
+    "ToxicConversationsClassification",         # 8
+    "TweetSentimentExtractionClassification",   # 9
 ]
 
 
@@ -89,7 +88,6 @@ class Config:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     config = Config.from_config()
 
     if not config.result_output_dir.exists():
