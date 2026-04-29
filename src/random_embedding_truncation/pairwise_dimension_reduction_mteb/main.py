@@ -7,15 +7,27 @@ from typing import Any
 import mteb
 from sentence_transformers.SentenceTransformer import SentenceTransformer
 
-from random_embedding_truncation.dimension_attribution_analysis_mteb.main import (
-    TASK_LIST_CLASSIFICATION,
-)
 from random_embedding_truncation.dimension_attribution_analysis_mteb.collect_results import (
     add_mean_metrics,
     collect_task_metrics,
 )
 from random_embedding_truncation.truncator import Truncator
 from random_embedding_truncation.utils import read_toml
+
+TASK_LIST_CLASSIFICATION = [
+    "AmazonCounterfactualClassification",       # 12
+    "AmazonPolarityClassification",             # 6
+    "AmazonReviewsClassification",              # 7
+    "Banking77Classification",                  # 1
+    "EmotionClassification",                    # 4
+    "ImdbClassification",                       # 5
+    "MassiveIntentClassification",              # 2
+    "MassiveScenarioClassification",            # 10
+    "MTOPDomainClassification",                 # 11
+    "MTOPIntentClassification",                 # 3
+    "ToxicConversationsClassification",         # 8
+    "TweetSentimentExtractionClassification",   # 9
+]
 
 REDUCTION_CASES = [
     ("only_helpful_1", "helpful_dimensions", 1),
