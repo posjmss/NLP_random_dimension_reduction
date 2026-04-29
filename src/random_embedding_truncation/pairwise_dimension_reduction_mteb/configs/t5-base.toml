@@ -1,0 +1,6 @@
+model_name = "sentence-transformers/sentence-t5-base"
+output_name = "t5-base"
+cache_dir = "./cache/pairwise_dimension_reduction_mteb/t5-base"
+result_output_dir = "./outputs/pairwise_dimension_reduction_mteb/"
+output_path = "./outputs/pairwise_dimension_reduction_mteb/results/t5-base.json"
+attribution_path = "./output_dim_eval/t5-base__mteb.json"

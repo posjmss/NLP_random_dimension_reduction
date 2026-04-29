@@ -223,16 +223,27 @@ def main() -> None:
     model_slug = config.model_name.replace("/", "-")
     raw_collected: dict[str, dict[str, float]] = {}
     tasks_by_dimension: dict[str, set[str]] = {}
+    dimensions = discover_dimensions(config)
 
-    for dimension in discover_dimensions(config):
+    print(
+        f"Discovered {len(dimensions)} dimensions in {config.result_output_dir} "
+        f"for {config.model_name}"
+    )
+    print(f"Collecting {len(config.task_list)} tasks per available dimension...")
+
+    for dimension_index, dimension in enumerate(dimensions, start=1):
+        print(f"[{dimension_index}/{len(dimensions)}] Collecting dimension {dimension}")
         dimension_metrics: dict[str, float] = {}
         for task in config.task_list:
             task_output_dir = (
                 config.result_output_dir / f"{task}_{model_slug}_{dimension}"
             )
             if not task_output_dir.exists():
+                print(f"  - {task}: missing")
                 continue
-            dimension_metrics.update(collect_task_metrics(task, task_output_dir))
+            task_metrics = collect_task_metrics(task, task_output_dir)
+            dimension_metrics.update(task_metrics)
+            print(f"  - {task}: {len(task_metrics)} metrics")
 
         if dimension_metrics:
             dimension_key = str(dimension)
@@ -240,11 +251,19 @@ def main() -> None:
             tasks_by_dimension[dimension_key] = get_present_tasks(
                 dimension_metrics, config.task_list
             )
+            print(
+                f"  -> dimension {dimension}: "
+                f"{len(dimension_metrics)} metrics from "
+                f"{len(tasks_by_dimension[dimension_key])} tasks"
+            )
+        else:
+            print(f"  -> dimension {dimension}: no metrics found")
 
     if tasks_by_dimension:
         common_tasks = set.intersection(*tasks_by_dimension.values())
     else:
         common_tasks = set()
+    print(f"Common tasks across collected dimensions: {len(common_tasks)}")
 
     metadata: dict[str, Any] = {
         "model_name": config.model_name,

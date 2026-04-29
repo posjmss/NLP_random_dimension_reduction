@@ -312,7 +312,6 @@ def get_output_path(config: Config) -> Path:
         [
             slugify(config.embedding),
             slugify(config.benchmark),
-            slugify(config.metric),
         ]
     )
     return config.output_dir / f"{filename}.json"
