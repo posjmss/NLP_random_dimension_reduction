@@ -13,19 +13,19 @@ from random_embedding_truncation.utils import read_toml
 
 
 DATASET_NAMES = [
-    "climatefever",   # 9
-    "dbpedia",        # 6
-    "fever",          # 13
+    # "climatefever",   # 9
+    # "dbpedia",        # 6
+    # "fever",          # 13
     "fiqa2018",       # 4
     "hotpotqa",       # 3
     "msmarco",        # 1
-    "nfcorpus",       # 7
+    # "nfcorpus",       # 7
     "nq",             # 2
-    "quoraretrieval", # 11
+    # "quoraretrieval", # 11
     "scidocs",        # 5
-    "arguana",        # 10
-    "scifact",        # 8
-    "touche2020",     # 12
+    # "arguana",        # 10
+    # "scifact",        # 8
+    # "touche2020",     # 12
 ]
 
 

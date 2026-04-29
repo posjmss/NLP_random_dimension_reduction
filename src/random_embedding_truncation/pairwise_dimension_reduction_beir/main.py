@@ -14,35 +14,35 @@ from random_embedding_truncation.truncator import Truncator, task_name_to_instru
 from random_embedding_truncation.utils import read_toml
 
 DATASET_NAMES = [
-    "climatefever",   # 9
-    "dbpedia",        # 6
-    "fever",          # 13
+    # "climatefever",   # 9
+    # "dbpedia",        # 6
+    # "fever",          # 13
     "fiqa2018",       # 4
     "hotpotqa",       # 3
     "msmarco",        # 1
-    "nfcorpus",       # 7
+    # "nfcorpus",       # 7
     "nq",             # 2
-    "quoraretrieval", # 11
+    # "quoraretrieval", # 11
     "scidocs",        # 5
-    "arguana",        # 10
-    "scifact",        # 8
-    "touche2020",     # 12
+    # "arguana",        # 10
+    # "scifact",        # 8
+    # "touche2020",     # 12
 ]
 
 NANOBEIR_TASKS = [
-    "NanoClimateFEVER",     # 9
-    "NanoDBPedia",          # 6
-    "NanoFEVER",            # 13
+    # "NanoClimateFEVER",     # 9
+    # "NanoDBPedia",          # 6
+    # "NanoFEVER",            # 13
     "NanoFiQA2018",         # 4
     "NanoHotpotQA",         # 3
     "NanoMSMARCO",          # 1
-    "NanoNFCorpus",         # 7
+    # "NanoNFCorpus",         # 7
     "NanoNQ",               # 2
-    "NanoQuoraRetrieval",   # 11
+    # "NanoQuoraRetrieval",   # 11
     "NanoSCIDOCS",          # 5
-    "NanoArguAna",          # 10
-    "NanoSciFact",          # 8
-    "NanoTouche2020",       # 12
+    # "NanoArguAna",          # 10
+    # "NanoSciFact",          # 8
+    # "NanoTouche2020",       # 12
 ]
 
 REDUCTION_CASES = [

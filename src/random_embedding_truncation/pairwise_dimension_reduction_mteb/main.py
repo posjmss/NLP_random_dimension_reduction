@@ -15,18 +15,18 @@ from random_embedding_truncation.truncator import Truncator
 from random_embedding_truncation.utils import read_toml
 
 TASK_LIST_CLASSIFICATION = [
-    "AmazonCounterfactualClassification",       # 12
-    "AmazonPolarityClassification",             # 6
-    "AmazonReviewsClassification",              # 7
+    # "AmazonCounterfactualClassification",       # 12
+    # "AmazonPolarityClassification",             # 6
+    # "AmazonReviewsClassification",              # 7
     "Banking77Classification",                  # 1
     "EmotionClassification",                    # 4
     "ImdbClassification",                       # 5
     "MassiveIntentClassification",              # 2
-    "MassiveScenarioClassification",            # 10
-    "MTOPDomainClassification",                 # 11
+    # "MassiveScenarioClassification",            # 10
+    # "MTOPDomainClassification",                 # 11
     "MTOPIntentClassification",                 # 3
-    "ToxicConversationsClassification",         # 8
-    "TweetSentimentExtractionClassification",   # 9
+    # "ToxicConversationsClassification",         # 8
+    # "TweetSentimentExtractionClassification",   # 9
 ]
 
 REDUCTION_CASES = [
