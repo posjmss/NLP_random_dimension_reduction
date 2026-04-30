@@ -32,10 +32,11 @@ def read_toml(toml_file: str) -> dict[str, Any]:
 
 @dataclass
 class Config:
-    input_path: Path
+    input_paths: list[Path]
     output_path: Path
     model_name: str | None
     output_name: str
+    merge_inputs: bool
 
     @classmethod
     def from_args(cls) -> "Config":
@@ -53,6 +54,14 @@ class Config:
             help="Raw BEIR attribution JSON. Overrides config output_path.",
         )
         parser.add_argument(
+            "--no-merge-inputs",
+            action="store_true",
+            help=(
+                "Read only the explicit/configured input file. By default, "
+                "also merges sibling <output-name>__<dataset>.json files."
+            ),
+        )
+        parser.add_argument(
             "--output",
             type=str,
             default=None,
@@ -64,19 +73,26 @@ class Config:
         if args.config:
             config = read_toml(args.config)
 
-        if args.input:
-            input_path = Path(args.input)
-        elif "output_path" in config:
-            input_path = Path(config["output_path"])
-        else:
-            raise ValueError("Pass either --input or --config with output_path.")
-
         if "output_name" in config:
             output_name = str(config["output_name"])
         elif args.config:
             output_name = Path(args.config).stem
+        elif args.input:
+            output_name = Path(args.input).stem.split("__")[0]
         else:
-            output_name = input_path.stem
+            output_name = "unknown"
+
+        if args.input:
+            primary_input_path = Path(args.input)
+        elif "output_path" in config:
+            primary_input_path = Path(config["output_path"])
+        else:
+            raise ValueError("Pass either --input or --config with output_path.")
+
+        input_paths = [primary_input_path]
+        if not args.no_merge_inputs:
+            input_paths = discover_input_paths(primary_input_path, output_name)
+
         output_path = (
             Path(args.output)
             if args.output
@@ -84,16 +100,62 @@ class Config:
         )
 
         return cls(
-            input_path=input_path,
+            input_paths=input_paths,
             output_path=output_path,
             model_name=config.get("model_name"),
             output_name=output_name,
+            merge_inputs=not args.no_merge_inputs,
         )
 
 
 def load_json(path: Path) -> Any:
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def discover_input_paths(primary_input_path: Path, output_name: str) -> list[Path]:
+    paths: list[Path] = []
+
+    if primary_input_path.exists():
+        paths.append(primary_input_path)
+
+    for path in sorted(primary_input_path.parent.glob(f"{output_name}__*.json")):
+        if path.name.endswith(".metadata.json") or ".baseline" in path.name:
+            continue
+        if path not in paths:
+            paths.append(path)
+
+    if not paths:
+        paths.append(primary_input_path)
+
+    return paths
+
+
+def merge_raw_results(input_paths: list[Path]) -> dict[str, dict[str, Any]]:
+    merged: dict[str, dict[str, Any]] = {}
+
+    for input_path in input_paths:
+        raw = load_json(input_path)
+        if not isinstance(raw, dict):
+            raise ValueError(f"Expected top-level object in {input_path}")
+
+        for dimension_key, metrics in raw.items():
+            if not isinstance(metrics, dict):
+                continue
+            dimension_metrics = merged.setdefault(str(dimension_key), {})
+            for metric_key, value in metrics.items():
+                if metric_key.startswith("NanoBEIR_mean_"):
+                    continue
+                if metric_key in dimension_metrics and dimension_metrics[metric_key] != value:
+                    raise ValueError(
+                        "Conflicting BEIR metric while merging inputs: "
+                        f"dimension={dimension_key!r}, metric={metric_key!r}, "
+                        f"existing={dimension_metrics[metric_key]!r}, "
+                        f"new={value!r}, input={input_path}"
+                    )
+                dimension_metrics[metric_key] = value
+
+    return merged
 
 
 def get_present_tasks(
@@ -149,9 +211,7 @@ def add_mean_metrics(
 
 
 def collect_common_dataset_results(config: Config) -> tuple[dict[str, Any], dict[str, Any]]:
-    raw = load_json(config.input_path)
-    if not isinstance(raw, dict):
-        raise ValueError(f"Expected top-level object in {config.input_path}")
+    raw = merge_raw_results(config.input_paths)
 
     raw_dimensions: dict[str, dict[str, Any]] = {
         str(dimension): metrics
@@ -178,7 +238,8 @@ def collect_common_dataset_results(config: Config) -> tuple[dict[str, Any], dict
     metadata = {
         "model_name": config.model_name,
         "output_name": config.output_name,
-        "input_path": str(config.input_path),
+        "input_paths": [str(path) for path in config.input_paths],
+        "merge_inputs": config.merge_inputs,
         "num_dimensions": len(raw_dimensions),
         "configured_tasks": NANOBEIR_TASKS,
         "common_tasks": sorted(common_tasks),
