@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import mteb
+import sienna
 from sentence_transformers.SentenceTransformer import SentenceTransformer
 
 from random_embedding_truncation.truncator import Truncator
@@ -59,7 +60,21 @@ if __name__ == "__main__":
     model_slug = config.model_name.replace("/", "-")
     end_index = config.end_index if config.end_index else dim_size
 
+    task = mteb.get_task(config.task, languages=["eng"])
+    eval_splits = ["dev"] if config.task == "MSMARCO" else ["test"]
+    task.load_data(eval_splits=eval_splits)
+
+    output_path = (
+        config.result_output_dir / f"{config.task}__{model_slug}.json"
+    )
+    if output_path.exists():
+        results = sienna.load(output_path)
+    else:
+        results = {}
+
     for dim_to_drop in range(config.start_index, end_index):
+        if str(dim_to_drop) in results:
+            continue
         print(f"{config.task}: {dim_to_drop} th dimension processing...")
         dims_to_keep = list(range(dim_size))
         del dims_to_keep[dim_to_drop]
@@ -70,14 +85,13 @@ if __name__ == "__main__":
             indexes_to_keep=dims_to_keep,
             is_e5=config.is_e5_mistral,
         )
-        output_folder = (
-            config.result_output_dir / f"{config.task}_{model_slug}_{dim_to_drop}"
-        )
-        eval_splits = ["dev"] if config.task == "MSMARCO" else ["test"]
-        evaluation = mteb.MTEB(tasks=[config.task], task_langs=["en"])
-        evaluation.run(
-            model,
-            output_folder=str(output_folder),
-            eval_splits=eval_splits,
-            encode_kwargs={"batch_size": config.batch_size},
-        )
+        dim_result: dict[str, object] = {}
+        for split in eval_splits:
+            scores = task.evaluate(
+                model,
+                eval_split=split,
+                encode_kwargs={"batch_size": config.batch_size},
+            )
+            dim_result[split] = scores
+        results[str(dim_to_drop)] = dim_result
+        sienna.save(results, output_path)
