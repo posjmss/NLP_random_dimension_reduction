@@ -47,6 +47,16 @@ class Truncator:
     def encode(self, *args, **kwargs):
         dimension = self.st.get_sentence_embedding_dimension()
 
+        # FinMTEB's evaluators pass prompt_name=task_name unconditionally.
+        # SentenceTransformer raises if that name isn't in its prompts dict
+        # (which is empty for stock all-mpnet-base-v2 etc.). Drop the lookup
+        # when the underlying model has no matching prompt.
+        prompt_name = kwargs.get("prompt_name")
+        if prompt_name is not None:
+            configured = getattr(self.st, "prompts", None) or {}
+            if prompt_name not in configured:
+                kwargs.pop("prompt_name")
+
         original_vecs = self.st.encode(*args, **kwargs)
 
         if self.indexes_to_keep is None:
