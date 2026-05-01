@@ -1,0 +1,3 @@
+model_name = "intfloat/e5-large-v2"
+cache_dir = "./cache/one_dim_drop_finmteb/e5-large-v2"
+result_output_dir = "./outputs/one_dim_drop_finmteb/"

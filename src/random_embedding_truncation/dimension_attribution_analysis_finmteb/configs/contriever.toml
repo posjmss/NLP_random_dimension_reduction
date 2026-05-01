@@ -1,0 +1,4 @@
+model_name = "nishimoto/contriever-sentencetransformer"
+cache_dir = "./cache/one_dim_drop_finmteb/contriever"
+result_output_dir = "./outputs/one_dim_drop_finmteb/"
+use_dot_product = true

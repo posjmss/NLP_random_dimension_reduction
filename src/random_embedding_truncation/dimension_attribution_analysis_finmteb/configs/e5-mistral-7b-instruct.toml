@@ -1,0 +1,4 @@
+model_name = "intfloat/e5-mistral-7b-instruct"
+cache_dir = "./cache/one_dim_drop_finmteb/e5-mistral-7b-instruct"
+result_output_dir = "./outputs/one_dim_drop_finmteb/"
+batch_size = 16

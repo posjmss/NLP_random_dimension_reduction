@@ -9,3 +9,6 @@ wheels/
 # Virtual environments
 .venv
 .DS_Store
+
+# Vendored third-party clones (cloned on demand; see READMEs)
+third_party/

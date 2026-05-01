@@ -1,0 +1,3 @@
+model_name = "sentence-transformers/paraphrase-MiniLM-L3-v2"
+cache_dir = "./cache/one_dim_drop_finmteb/paraphrase-MiniLM-L3-v2"
+result_output_dir = "./outputs/one_dim_drop_finmteb/"

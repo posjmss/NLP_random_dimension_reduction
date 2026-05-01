@@ -1,0 +1,3 @@
+model_name = "google-bert/bert-base-uncased"
+cache_dir = "./cache/one_dim_drop_finmteb/bert-base-uncased"
+result_output_dir = "./outputs/one_dim_drop_finmteb/"
