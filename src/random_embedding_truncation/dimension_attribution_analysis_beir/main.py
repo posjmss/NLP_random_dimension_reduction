@@ -51,8 +51,6 @@ class Config:
             Path(_config["cache_dir"]),
             Path(_config["output_path"]),
             use_dot_product=_config.get("use_dot_product", False),
-            # [customized] add query/passage prefix at e5-large model too
-            # is_e5_mistral="e5-large-v2" in _config["model_name"],
             is_e5_mistral="e5-mistral" in _config["model_name"],
             # [customized] Match the MTEB attribution script's partial-run config.
             start_index=_config.get("start_index", 0),
@@ -93,7 +91,7 @@ if __name__ == "__main__":
         evaluator = NanoBEIREvaluator(
             dataset_names=DATASET_NAMES,
             # [customized] get ndcg@5, ndcg@10 both
-            ndcg_at_k=[5, 10],
+            ndcg_at_k=[5, 10, 20],
             score_functions={SimilarityFunction.COSINE.value: cos_sim}
             if not config.use_dot_product
             else {SimilarityFunction.DOT_PRODUCT.value: dot_score},
