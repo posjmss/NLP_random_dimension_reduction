@@ -153,7 +153,7 @@ if __name__ == "__main__":
     )
     evaluator = NanoBEIREvaluator(
         dataset_names=DATASET_NAMES,
-        ndcg_at_k=[5, 10],
+        ndcg_at_k=[5, 10, 20],
         score_functions={SimilarityFunction.COSINE.value: cos_sim}
         if not config.use_dot_product
         else {SimilarityFunction.DOT_PRODUCT.value: dot_score},
