@@ -134,24 +134,45 @@ def find_task_temp_path(input_dir: Path, task: str, model_name: str) -> Path | N
     return None
 
 
+def select_primary_score_mapping(split_result: Any) -> Any:
+    if not isinstance(split_result, dict):
+        return split_result
+
+    preferred_keys = ("default", "en")
+    for key in preferred_keys:
+        value = split_result.get(key)
+        if isinstance(value, dict):
+            return value
+
+    nested_score_keys = [
+        key for key, value in split_result.items() if isinstance(value, dict)
+    ]
+    if nested_score_keys and all(
+        isinstance(split_result[key], dict) for key in nested_score_keys
+    ):
+        return split_result[sorted(nested_score_keys)[0]]
+
+    return split_result
+
+
+def normalize_split_scores(split_result: Any) -> list[Any]:
+    if isinstance(split_result, list):
+        return [select_primary_score_mapping(item) for item in split_result]
+    return [select_primary_score_mapping(split_result)]
+
+
 def normalize_temp_task_result(raw_result: Any) -> dict[str, Any]:
     if not isinstance(raw_result, dict):
         raise ValueError("Each dimension result must be a JSON object")
 
-    if "scores" in raw_result:
-        return raw_result
-
+    raw_scores = raw_result.get("scores") if "scores" in raw_result else raw_result
     scores: dict[str, list[Any]] = {}
-    for split, split_result in raw_result.items():
+    for split, split_result in raw_scores.items():
         if split == "metadata":
             continue
-        if not isinstance(split_result, dict):
+        if not isinstance(split_result, dict | list):
             continue
-
-        if "default" in split_result:
-            scores[str(split)] = [split_result["default"]]
-        else:
-            scores[str(split)] = [split_result]
+        scores[str(split)] = normalize_split_scores(split_result)
 
     if not scores:
         raise ValueError("No split metrics found in dimension result")
