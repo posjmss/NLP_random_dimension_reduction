@@ -13,6 +13,10 @@ from random_embedding_truncation.dimension_attribution_analysis_mteb.collect_res
     read_toml,
 )
 
+PACKAGE_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_INPUT_DIR = PACKAGE_ROOT / "outputs" / "temp"
+DEFAULT_OUTPUT_DIR = PACKAGE_ROOT / "output_summary"
+
 
 @dataclass
 class Config:
@@ -30,7 +34,7 @@ class Config:
         parser.add_argument(
             "--input-dir",
             type=str,
-            default="./outputs/temp",
+            default=None,
             help="Directory containing task-level JSON files from main_param_mteb.py.",
         )
         parser.add_argument(
@@ -54,13 +58,13 @@ class Config:
         output_path = (
             Path(args.output)
             if args.output
-            else Path("./output_summary") / f"{output_name}__mteb.json"
+            else DEFAULT_OUTPUT_DIR / f"{output_name}__mteb.json"
         )
 
         return cls(
             model_name=config["model_name"],
             output_name=output_name,
-            input_dir=Path(args.input_dir),
+            input_dir=Path(args.input_dir) if args.input_dir else DEFAULT_INPUT_DIR,
             output_path=output_path,
             task_list=config.get("task_list", TASK_LIST_CLASSIFICATION),
             overwrite=args.overwrite,
@@ -147,6 +151,12 @@ def main() -> None:
             continue
         task_results[task] = load_task_file(path)
         print(f"{task}: loaded {len(task_results[task])} dimensions from {path}")
+
+    if not task_results:
+        raise FileNotFoundError(
+            "No temp result files found for "
+            f"{config.model_name} in {config.input_dir}"
+        )
 
     dimensions = sorted(
         {
