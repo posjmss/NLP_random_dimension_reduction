@@ -13,6 +13,10 @@ from random_embedding_truncation.dimension_attribution_analysis_mteb.collect_res
     read_toml,
 )
 
+
+DEFAULT_INPUT_DIR = Path("./outputs/temp")
+PACKAGE_INPUT_DIR = Path(__file__).resolve().parents[1] / "outputs" / "temp"
+
 @dataclass
 class Config:
     model_name: str
@@ -30,7 +34,11 @@ class Config:
             "--input-dir",
             type=str,
             default=None,
-            help="Directory containing task-level JSON files from main_param_mteb.py.",
+            help=(
+                "Directory containing task-level JSON files from main_param_mteb.py. "
+                "Defaults to ./outputs/temp, or the package-local outputs/temp if "
+                "./outputs/temp does not exist."
+            ),
         )
         parser.add_argument(
             "--output",
@@ -59,7 +67,7 @@ class Config:
         return cls(
             model_name=config["model_name"],
             output_name=output_name,
-            input_dir=Path(args.input_dir) if args.input_dir else Path("./outputs/temp"),
+            input_dir=Path(args.input_dir) if args.input_dir else default_input_dir(),
             output_path=output_path,
             task_list=config.get("task_list", TASK_LIST_CLASSIFICATION),
             overwrite=args.overwrite,
@@ -71,12 +79,38 @@ def load_json(path: Path) -> Any:
         return json.load(f)
 
 
+def default_input_dir() -> Path:
+    if DEFAULT_INPUT_DIR.exists():
+        return DEFAULT_INPUT_DIR
+    return PACKAGE_INPUT_DIR
+
+
 def model_slug(model_name: str) -> str:
     return model_name.replace("/", "-")
 
 
-def task_temp_path(input_dir: Path, task: str, model_name: str) -> Path:
-    return input_dir / f"{task}__{model_slug(model_name)}.json"
+def task_temp_path_candidates(input_dir: Path, task: str, model_name: str) -> list[Path]:
+    full_slug = model_slug(model_name)
+    short_slug = model_name.rstrip("/").split("/")[-1]
+    candidates = [
+        input_dir / f"{task}__{full_slug}.json",
+        input_dir / f"{task}_{full_slug}.json",
+    ]
+    if short_slug != full_slug:
+        candidates.extend(
+            [
+                input_dir / f"{task}__{short_slug}.json",
+                input_dir / f"{task}_{short_slug}.json",
+            ]
+        )
+    return candidates
+
+
+def find_task_temp_path(input_dir: Path, task: str, model_name: str) -> Path | None:
+    for candidate in task_temp_path_candidates(input_dir, task, model_name):
+        if candidate.exists():
+            return candidate
+    return None
 
 
 def normalize_temp_task_result(raw_result: Any) -> dict[str, Any]:
@@ -137,14 +171,16 @@ def main() -> None:
         )
 
     task_results: dict[str, dict[int, Any]] = {}
+    loaded_files: dict[str, str] = {}
     missing_tasks: list[str] = []
 
     for task in config.task_list:
-        path = task_temp_path(config.input_dir, task, config.model_name)
-        if not path.exists():
+        path = find_task_temp_path(config.input_dir, task, config.model_name)
+        if path is None:
             missing_tasks.append(task)
             continue
         task_results[task] = load_task_file(path)
+        loaded_files[task] = str(path)
         print(f"{task}: loaded {len(task_results[task])} dimensions from {path}")
 
     if not task_results:
@@ -198,6 +234,7 @@ def main() -> None:
         "num_dimensions": len(collected),
         "configured_tasks": config.task_list,
         "converted_tasks": sorted(task_results.keys()),
+        "loaded_files": loaded_files,
         "missing_tasks": missing_tasks,
         "common_tasks": sorted(common_tasks),
         "excluded_tasks": sorted(set(config.task_list) - common_tasks),
