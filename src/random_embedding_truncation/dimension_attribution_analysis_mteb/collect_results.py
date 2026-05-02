@@ -9,16 +9,16 @@ from typing import Any
 
 TASK_LIST_CLASSIFICATION = [
     "AmazonCounterfactualClassification",
-    "AmazonPolarityClassification",
-    "AmazonReviewsClassification",
-    "Banking77Classification",
+    # "AmazonPolarityClassification",
+    # "AmazonReviewsClassification",
+    # "Banking77Classification",
     "EmotionClassification",
     "ImdbClassification",
-    "MassiveIntentClassification",
-    "MassiveScenarioClassification",
+    # "MassiveIntentClassification",
+    # "MassiveScenarioClassification",
     "MTOPDomainClassification",
-    "MTOPIntentClassification",
-    "ToxicConversationsClassification",
+    # "MTOPIntentClassification",
+    # "ToxicConversationsClassification",
     "TweetSentimentExtractionClassification",
 ]
 

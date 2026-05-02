@@ -58,6 +58,12 @@ class Config:
 
         config = read_toml(args.config)
         output_name = str(config.get("output_name", Path(args.config).stem))
+        input_dir = Path(args.input_dir) if args.input_dir else default_input_dir()
+        task_list = config.get("task_list")
+        if task_list is None:
+            task_list = discover_temp_tasks(input_dir, config["model_name"])
+        if not task_list:
+            task_list = TASK_LIST_CLASSIFICATION
         output_path = (
             Path(args.output)
             if args.output
@@ -67,9 +73,9 @@ class Config:
         return cls(
             model_name=config["model_name"],
             output_name=output_name,
-            input_dir=Path(args.input_dir) if args.input_dir else default_input_dir(),
+            input_dir=input_dir,
             output_path=output_path,
-            task_list=config.get("task_list", TASK_LIST_CLASSIFICATION),
+            task_list=task_list,
             overwrite=args.overwrite,
         )
 
@@ -89,21 +95,36 @@ def model_slug(model_name: str) -> str:
     return model_name.replace("/", "-")
 
 
-def task_temp_path_candidates(input_dir: Path, task: str, model_name: str) -> list[Path]:
+def model_slugs(model_name: str) -> list[str]:
     full_slug = model_slug(model_name)
     short_slug = model_name.rstrip("/").split("/")[-1]
-    candidates = [
-        input_dir / f"{task}__{full_slug}.json",
-        input_dir / f"{task}_{full_slug}.json",
+    return [full_slug] if short_slug == full_slug else [full_slug, short_slug]
+
+
+def discover_temp_tasks(input_dir: Path, model_name: str) -> list[str]:
+    discovered: set[str] = set()
+
+    if not input_dir.exists():
+        return []
+
+    for slug in model_slugs(model_name):
+        for path in input_dir.glob(f"*__{slug}.json"):
+            discovered.add(path.name.removesuffix(f"__{slug}.json"))
+        for path in input_dir.glob(f"*_{slug}.json"):
+            if path.name.endswith(f"__{slug}.json"):
+                continue
+            discovered.add(path.name.removesuffix(f"_{slug}.json"))
+
+    task_order = {task: index for index, task in enumerate(TASK_LIST_CLASSIFICATION)}
+    return sorted(discovered, key=lambda task: (task_order.get(task, len(task_order)), task))
+
+
+def task_temp_path_candidates(input_dir: Path, task: str, model_name: str) -> list[Path]:
+    return [
+        input_dir / f"{task}{separator}{slug}.json"
+        for slug in model_slugs(model_name)
+        for separator in ("__", "_")
     ]
-    if short_slug != full_slug:
-        candidates.extend(
-            [
-                input_dir / f"{task}__{short_slug}.json",
-                input_dir / f"{task}_{short_slug}.json",
-            ]
-        )
-    return candidates
 
 
 def find_task_temp_path(input_dir: Path, task: str, model_name: str) -> Path | None:
