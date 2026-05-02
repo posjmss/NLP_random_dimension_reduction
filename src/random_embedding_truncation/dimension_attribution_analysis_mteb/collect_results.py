@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import tomllib
 from argparse import ArgumentParser
 from dataclasses import dataclass
@@ -42,7 +43,41 @@ class Config:
     @classmethod
     def from_args(cls) -> "Config":
         parser = ArgumentParser()
-        parser.add_argument("--config", type=str, required=True)
+        parser.add_argument(
+            "--config",
+            type=str,
+            default=None,
+            help="Config TOML path. Optional when --model-name is provided.",
+        )
+        parser.add_argument(
+            "--model",
+            type=str,
+            default=None,
+            help=(
+                "Short model key, e.g. t5-base. Loads "
+                "dimension_attribution_analysis_mteb/configs/<model>.toml."
+            ),
+        )
+        parser.add_argument(
+            "--model-name",
+            type=str,
+            default=None,
+            help="Embedding model name, e.g. intfloat/e5-large-v2.",
+        )
+        parser.add_argument(
+            "--output-name",
+            type=str,
+            default=None,
+            help="Output filename prefix. Defaults to config stem or model slug.",
+        )
+        parser.add_argument(
+            "--result-output-dir",
+            type=str,
+            default=None,
+            help="Directory containing raw MTEB dimension output folders.",
+        )
+        parser.add_argument("--start-index", type=int, default=None)
+        parser.add_argument("--end-index", type=int, default=None)
         parser.add_argument(
             "--output",
             type=str,
@@ -51,10 +86,24 @@ class Config:
         )
         args = parser.parse_args()
 
-        config = read_toml(args.config)
-        model_name = config["model_name"]
-        output_name = str(config.get("output_name", Path(args.config).stem))
-        result_output_dir = Path(config["result_output_dir"])
+        config_path = Path(args.config) if args.config else None
+        if config_path is None and args.model:
+            config_path = get_config_path(args.model)
+
+        config = read_toml(str(config_path)) if config_path else {}
+        model_name = args.model_name or config.get("model_name")
+        if model_name is None:
+            raise ValueError("Pass --config, --model, or --model-name.")
+
+        output_name = str(
+            args.output_name
+            or config.get("output_name")
+            or (config_path.stem if config_path else slugify_model_name(model_name))
+        )
+        result_output_dir = Path(
+            args.result_output_dir
+            or config.get("result_output_dir", "./outputs/one_dim_drop_mteb/")
+        )
         output_path = (
             Path(args.output)
             if args.output
@@ -67,9 +116,26 @@ class Config:
             result_output_dir=result_output_dir,
             output_path=output_path,
             task_list=config.get("task_list", TASK_LIST_CLASSIFICATION),
-            start_index=config.get("start_index"),
-            end_index=config.get("end_index"),
+            start_index=args.start_index
+            if args.start_index is not None
+            else config.get("start_index"),
+            end_index=args.end_index
+            if args.end_index is not None
+            else config.get("end_index"),
         )
+
+
+def get_config_path(model_key: str) -> Path:
+    config_path = Path(__file__).resolve().parent / "configs" / f"{model_key}.toml"
+    if not config_path.exists():
+        raise FileNotFoundError(f"Model config not found: {config_path}")
+    return config_path
+
+
+def slugify_model_name(model_name: str) -> str:
+    short_name = model_name.rstrip("/").split("/")[-1]
+    slug = re.sub(r"[^A-Za-z0-9._@+-]+", "-", short_name.strip())
+    return slug.strip("-") or "unknown"
 
 
 def find_score_jsons(task_output_dir: Path) -> list[Path]:

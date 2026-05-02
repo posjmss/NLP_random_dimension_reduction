@@ -1,4 +1,5 @@
 import json
+import math
 from argparse import ArgumentParser
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,24 +31,15 @@ TASK_LIST_CLASSIFICATION = [
 ]
 
 REDUCTION_CASES = [
-    ("only_helpful_2", "helpful_dimensions", 2),
-    ("only_helpful_4", "helpful_dimensions", 4),
-    ("only_helpful_10", "helpful_dimensions", 10),
-    ("only_helpful_20", "helpful_dimensions", 20),
-    ("only_helpful_40", "helpful_dimensions", 40),
-    ("only_helpful_100", "helpful_dimensions", 100),
-    ("only_harmful_2", "harmful_dimensions", 2),
-    ("only_harmful_4", "harmful_dimensions", 4),
-    ("only_harmful_10", "harmful_dimensions", 10),
-    ("only_harmful_20", "harmful_dimensions", 20),
-    ("only_harmful_40", "harmful_dimensions", 40),
-    ("only_harmful_100", "harmful_dimensions", 100),
-    ("helpful_harmful_1_1", "helpful_harmful", 1),
-    ("helpful_harmful_2_2", "helpful_harmful", 2),
-    ("helpful_harmful_5_5", "helpful_harmful", 5),
-    ("helpful_harmful_10_10", "helpful_harmful", 10),
-    ("helpful_harmful_20_20", "helpful_harmful", 20),
-    ("helpful_harmful_50_50", "helpful_harmful", 50),
+    ("only_helpful_5pct", "helpful_dimensions", 0.05),
+    ("only_helpful_10pct", "helpful_dimensions", 0.10),
+    ("only_helpful_20pct", "helpful_dimensions", 0.20),
+    ("only_harmful_5pct", "harmful_dimensions", 0.05),
+    ("only_harmful_10pct", "harmful_dimensions", 0.10),
+    ("only_harmful_20pct", "harmful_dimensions", 0.20),
+    ("helpful_harmful_2_5pct_each", "helpful_harmful", 0.025),
+    ("helpful_harmful_5pct_each", "helpful_harmful", 0.05),
+    ("helpful_harmful_10pct_each", "helpful_harmful", 0.10),
 ]
 
 
@@ -134,22 +126,53 @@ def load_json(path: Path) -> Any:
         return json.load(f)
 
 
-def get_dimensions_to_drop(
-    attribution: dict[str, Any], case_kind: str, count: int
-) -> list[int]:
-    if case_kind == "helpful_harmful":
-        dimensions = (
-            attribution.get("helpful_dimensions", [])[:count]
-            + attribution.get("harmful_dimensions", [])[:count]
-        )
-        expected_count = count * 2
-    else:
-        dimensions = attribution.get(case_kind, [])[:count]
-        expected_count = count
+def requested_drop_count(dim_size: int, ratio: float) -> int:
+    if dim_size <= 0:
+        raise ValueError(f"Embedding dimension must be positive, got {dim_size}")
+    return math.floor(dim_size * ratio)
 
-    if len(dimensions) < expected_count:
-        raise ValueError(f"Not enough dimensions for case {case_kind}_{count}")
-    return sorted({int(dimension) for dimension in dimensions})
+
+def get_reduction_plan(
+    attribution: dict[str, Any],
+    case_name: str,
+    case_kind: str,
+    ratio: float,
+    dim_size: int,
+) -> dict[str, Any]:
+    requested_count = requested_drop_count(dim_size, ratio)
+    helpful = [int(dimension) for dimension in attribution.get("helpful_dimensions", [])]
+    harmful = [int(dimension) for dimension in attribution.get("harmful_dimensions", [])]
+
+    if case_kind == "helpful_harmful":
+        selected_helpful = helpful[: min(len(helpful), requested_count)]
+        selected_harmful = harmful[: min(len(harmful), requested_count)]
+        dimensions_to_drop = sorted({*selected_helpful, *selected_harmful})
+        requested_total_count = requested_count * 2
+    elif case_kind == "helpful_dimensions":
+        selected_helpful = helpful[: min(len(helpful), requested_count)]
+        selected_harmful = []
+        dimensions_to_drop = selected_helpful
+        requested_total_count = requested_count
+    elif case_kind == "harmful_dimensions":
+        selected_helpful = []
+        selected_harmful = harmful[: min(len(harmful), requested_count)]
+        dimensions_to_drop = selected_harmful
+        requested_total_count = requested_count
+    else:
+        raise ValueError(f"Unknown reduction case kind: {case_kind}")
+
+    return {
+        "case_name": case_name,
+        "case_kind": case_kind,
+        "requested_ratio_per_group": ratio,
+        "requested_count_per_group": requested_count,
+        "requested_total_count": requested_total_count,
+        "selected_helpful_count": len(selected_helpful),
+        "selected_harmful_count": len(selected_harmful),
+        "num_dropped_dimensions": len(dimensions_to_drop),
+        "actual_total_ratio": len(dimensions_to_drop) / dim_size,
+        "dimensions_to_drop": sorted(dimensions_to_drop),
+    }
 
 
 def make_indexes_to_keep(dim_size: int, dimensions_to_drop: list[int]) -> list[int]:
@@ -231,21 +254,30 @@ if __name__ == "__main__":
     else:
         grouped_results = {}
 
-    for case_name, case_kind, count in REDUCTION_CASES:
-        dimensions_to_drop = get_dimensions_to_drop(attribution, case_kind, count)
+    for case_name, case_kind, ratio in REDUCTION_CASES:
+        reduction_plan = get_reduction_plan(
+            attribution, case_name, case_kind, ratio, dim_size
+        )
+        dimensions_to_drop = reduction_plan["dimensions_to_drop"]
         indexes_to_keep = make_indexes_to_keep(dim_size, dimensions_to_drop)
-        print(f"{case_name}: dropping dimensions {dimensions_to_drop}")
+        print(
+            f"{case_name}: dropping {len(dimensions_to_drop)} dimensions "
+            f"(requested {reduction_plan['requested_count_per_group']} per group) "
+            f"{dimensions_to_drop}"
+        )
         case_results = grouped_results.setdefault(
             case_name,
             {
                 "dimensions_to_drop": dimensions_to_drop,
                 "num_dropped_dimensions": len(dimensions_to_drop),
+                "reduction_plan": reduction_plan,
                 "metrics": {},
                 "tasks": {},
             },
         )
         case_results["dimensions_to_drop"] = dimensions_to_drop
         case_results["num_dropped_dimensions"] = len(dimensions_to_drop)
+        case_results["reduction_plan"] = reduction_plan
 
         model = Truncator(
             encoder,
@@ -282,6 +314,7 @@ if __name__ == "__main__":
                         "case_name": case_name,
                         "dimensions_to_drop": dimensions_to_drop,
                         "num_dropped_dimensions": len(dimensions_to_drop),
+                        "reduction_plan": reduction_plan,
                         "attribution_path": str(config.attribution_path),
                     },
                     f,
