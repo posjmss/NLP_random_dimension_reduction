@@ -135,14 +135,27 @@ def discover_input_paths(primary_input_path: Path, output_name: str) -> list[Pat
     if primary_input_path.exists():
         paths.append(primary_input_path)
 
-    for path in sorted(primary_input_path.parent.glob(f"{output_name}__*.json")):
-        if path.name.endswith(".metadata.json") or ".baseline" in path.name:
-            continue
-        if path not in paths:
-            paths.append(path)
+    search_prefixes = [output_name]
+    primary_stem = primary_input_path.stem
+    if primary_stem not in search_prefixes:
+        search_prefixes.append(primary_stem)
+
+    searched_patterns: list[str] = []
+    for prefix in search_prefixes:
+        pattern = f"{prefix}__*.json"
+        searched_patterns.append(str(primary_input_path.parent / pattern))
+        for path in sorted(primary_input_path.parent.glob(pattern)):
+            if path.name.endswith(".metadata.json") or ".baseline" in path.name:
+                continue
+            if path not in paths:
+                paths.append(path)
 
     if not paths:
-        paths.append(primary_input_path)
+        raise FileNotFoundError(
+            "No BEIR result files found. Expected the configured output_path "
+            "file or dataset-level files matching one of: "
+            + ", ".join(searched_patterns)
+        )
 
     return paths
 
