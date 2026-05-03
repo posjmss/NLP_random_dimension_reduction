@@ -8,28 +8,19 @@ import matplotlib.pyplot as plt
 DEFAULT_METRIC = "NanoBEIR_mean_cosine_ndcg@10"
 PLOT_GROUPS = {
     "only_helpful": [
-        ("only_helpful_2", 2),
-        ("only_helpful_4", 4),
-        ("only_helpful_10", 10),
-        ("only_helpful_20", 20),
-        ("only_helpful_40", 40),
-        ("only_helpful_100", 100),
+        ("only_helpful_5pct", "5%"),
+        ("only_helpful_10pct", "10%"),
+        ("only_helpful_20pct", "20%"),
     ],
     "only_harmful": [
-        ("only_harmful_2", 2),
-        ("only_harmful_4", 4),
-        ("only_harmful_10", 10),
-        ("only_harmful_20", 20),
-        ("only_harmful_40", 40),
-        ("only_harmful_100", 100),
+        ("only_harmful_5pct", "5%"),
+        ("only_harmful_10pct", "10%"),
+        ("only_harmful_20pct", "20%"),
     ],
     "helpful_harmful": [
-        ("helpful_harmful_1_1", 2),
-        ("helpful_harmful_2_2", 4),
-        ("helpful_harmful_5_5", 10),
-        ("helpful_harmful_10_10", 20),
-        ("helpful_harmful_20_20", 40),
-        ("helpful_harmful_50_50", 100),
+        ("helpful_harmful_2_5pct_each", "2.5% + 2.5%"),
+        ("helpful_harmful_5pct_each", "5% + 5%"),
+        ("helpful_harmful_10pct_each", "10% + 10%"),
     ],
 }
 
@@ -79,20 +70,38 @@ def case_score(pairwise: dict[str, Any], case_name: str, metric: str) -> float |
     return float(score)
 
 
+def case_label(pairwise: dict[str, Any], case_name: str, fallback_label: str) -> str:
+    case = pairwise.get(case_name)
+    if not isinstance(case, dict):
+        return fallback_label
+
+    reduction_plan = case.get("reduction_plan")
+    if isinstance(reduction_plan, dict):
+        actual_ratio = reduction_plan.get("actual_total_ratio")
+        if isinstance(actual_ratio, int | float) and not isinstance(actual_ratio, bool):
+            return f"{actual_ratio * 100:.1f}%"
+
+    dropped_count = case.get("num_dropped_dimensions")
+    if isinstance(dropped_count, int) and not isinstance(dropped_count, bool):
+        return f"{fallback_label}\n({dropped_count} dims)"
+
+    return fallback_label
+
+
 def plot_group(
     model_name: str,
     group_name: str,
-    values: list[tuple[int, float]],
+    values: list[tuple[str, float]],
     output_path: Path,
 ) -> None:
-    x_labels = [str(dim_count) for dim_count, _ in values]
+    x_labels = [label for label, _ in values]
     y_values = [relative_score for _, relative_score in values]
 
     plt.figure(figsize=(8, 5))
     plt.bar(x_labels, y_values, color="tab:blue")
     plt.axhline(100.0, color="red", linewidth=1.5, label="baseline")
     plt.title(f"{model_name} - {group_name}")
-    plt.xlabel("Number of removed dimensions")
+    plt.xlabel("Removed dimensions")
     plt.ylabel("Relative performance (%)")
     plt.ylim(min(95, min(y_values) - 1), max(105, max(y_values) + 1))
     plt.grid(axis="y", alpha=0.25)
@@ -147,13 +156,18 @@ def main() -> None:
             raise ValueError(f"Expected top-level object in {pairwise_path}")
 
         for group_name, cases in PLOT_GROUPS.items():
-            values: list[tuple[int, float]] = []
-            for case_name, removed_count in cases:
+            values: list[tuple[str, float]] = []
+            for case_name, fallback_label in cases:
                 score = case_score(pairwise, case_name, args.metric)
                 if score is None:
                     print(f"Skipping {model_name} {case_name}: missing {args.metric}")
                     continue
-                values.append((removed_count, (score / baseline) * 100.0))
+                values.append(
+                    (
+                        case_label(pairwise, case_name, fallback_label),
+                        (score / baseline) * 100.0,
+                    )
+                )
             if values:
                 plot_group(
                     model_name=model_name,
