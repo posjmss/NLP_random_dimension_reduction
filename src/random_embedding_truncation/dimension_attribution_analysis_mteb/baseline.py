@@ -95,7 +95,7 @@ if __name__ == "__main__":
     if not config.summary_output_path.parent.exists():
         config.summary_output_path.parent.mkdir(parents=True)
 
-    encoder = SentenceTransformer(config.model_name)
+    encoder = SentenceTransformer(config.model_name, trust_remote_code=True)
     model = Truncator(
         encoder,
         resize_scale=1.0,

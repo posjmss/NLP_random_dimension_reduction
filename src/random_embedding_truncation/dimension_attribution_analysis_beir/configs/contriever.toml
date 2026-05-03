@@ -1,4 +1,4 @@
-cache_dir = "./outputs/one_dim_drop/cache/contriever"
-output_path = "./outputs/one_dim_drop/results/contriever.json"
+cache_dir = "./cache/one_dim_drop_beir/contriever"
+output_path = "./outputs/one_dim_drop_beir/results/contriever.json"
 model_name = "nishimoto/contriever-sentencetransformer"
 use_dot_product = true

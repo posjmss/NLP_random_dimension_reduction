@@ -53,7 +53,7 @@ if __name__ == "__main__":
     if not config.result_output_dir.exists():
         config.result_output_dir.mkdir(parents=True)
 
-    encoder = SentenceTransformer(config.model_name)
+    encoder = SentenceTransformer(config.model_name, trust_remote_code=True)
     dim_size = encoder.get_sentence_embedding_dimension()
     assert isinstance(dim_size, int)
 
