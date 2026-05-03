@@ -16,30 +16,33 @@ from random_embedding_truncation.truncator import Truncator
 from random_embedding_truncation.utils import read_toml
 
 TASK_LIST_CLASSIFICATION = [
-    # "AmazonCounterfactualClassification",       # 12
+    "AmazonCounterfactualClassification",       # 12
     # "AmazonPolarityClassification",             # 6
     # "AmazonReviewsClassification",              # 7
-    "Banking77Classification",                  # 1
+    # "Banking77Classification",                  # 1
     "EmotionClassification",                    # 4
     "ImdbClassification",                       # 5
-    "MassiveIntentClassification",              # 2
+    # "MassiveIntentClassification",              # 2
     # "MassiveScenarioClassification",            # 10
-    # "MTOPDomainClassification",                 # 11
-    "MTOPIntentClassification",                 # 3
+    "MTOPDomainClassification",                 # 11
+    # "MTOPIntentClassification",                 # 3
     # "ToxicConversationsClassification",         # 8
-    # "TweetSentimentExtractionClassification",   # 9
+    "TweetSentimentExtractionClassification",   # 9
 ]
 
 REDUCTION_CASES = [
     ("only_helpful_5pct", "helpful_dimensions", 0.05),
     ("only_helpful_10pct", "helpful_dimensions", 0.10),
-    ("only_helpful_20pct", "helpful_dimensions", 0.20),
+    ("only_helpful_15pct", "helpful_dimensions", 0.15),
+    ("only_helpful_18pct", "helpful_dimensions", 0.18),
     ("only_harmful_5pct", "harmful_dimensions", 0.05),
     ("only_harmful_10pct", "harmful_dimensions", 0.10),
-    ("only_harmful_20pct", "harmful_dimensions", 0.20),
+    ("only_harmful_15pct", "harmful_dimensions", 0.15),
+    ("only_harmful_18pct", "harmful_dimensions", 0.18),
     ("helpful_harmful_2_5pct_each", "helpful_harmful", 0.025),
     ("helpful_harmful_5pct_each", "helpful_harmful", 0.05),
-    ("helpful_harmful_10pct_each", "helpful_harmful", 0.10),
+    ("helpful_harmful_7_5pct_each", "helpful_harmful", 0.075),
+    ("helpful_harmful_9pct_each", "helpful_harmful", 0.09),
 ]
 
 
