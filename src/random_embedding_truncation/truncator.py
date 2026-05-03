@@ -87,7 +87,7 @@ class Truncator:
 
     def encode_corpus(
         self,
-        corpus: list[dict[str, str]] | dict[str, list],
+        corpus: list[dict[str, str]] | list[str] | dict[str, list],
         batch_size: int = 8,
         sep: str = " ",
         **kwargs,
@@ -102,14 +102,14 @@ class Truncator:
                 for i in range(len(corpus["text"]))
             ]
         else:
-            sentences = [
-                (
-                    (doc["title"] + sep + doc["text"]).strip()
-                    if "title" in doc
-                    else doc["text"].strip()
-                )
-                for doc in corpus
-            ]
+            sentences = []
+            for doc in corpus:
+                if isinstance(doc, str):
+                    sentences.append(doc.strip())
+                elif "title" in doc:
+                    sentences.append((doc["title"] + sep + doc["text"]).strip())
+                else:
+                    sentences.append(doc["text"].strip())
 
         if self.is_e5:
             sentences = [f"passage: {s}" for s in sentences]

@@ -57,6 +57,12 @@ class Config:
                 "./output_summary/<config-name>__finmteb.baseline.json."
             ),
         )
+        parser.add_argument(
+            "--tasks",
+            type=str,
+            default=None,
+            help="Comma-separated task names. Overrides config 'task_list' / default selection.",
+        )
         args = parser.parse_args()
         config = read_toml(args.config)
         output_name = str(config.get("output_name", Path(args.config).stem))
@@ -65,6 +71,11 @@ class Config:
             if args.summary_output
             else Path("./output_summary") / f"{output_name}__finmteb.baseline.json"
         )
+
+        if args.tasks:
+            task_list = [t.strip() for t in args.tasks.split(",") if t.strip()]
+        else:
+            task_list = config.get("task_list", DEFAULT_TASK_LIST)
 
         return cls(
             model_name=config["model_name"],
@@ -75,7 +86,7 @@ class Config:
             else Path(config["result_output_dir"]),
             summary_output_path=summary_output_path,
             batch_size=config.get("batch_size", 32),
-            task_list=config.get("task_list", DEFAULT_TASK_LIST),
+            task_list=task_list,
         )
 
     @property
