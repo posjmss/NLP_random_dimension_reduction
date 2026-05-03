@@ -1,0 +1,5 @@
+model_name = "sentence-transformers/all-mpnet-base-v2"
+output_name = "all-mpnet-base-v2"
+cache_dir = "./outputs/one_dim_drop/cache/all-mpnet-base-v2"
+output_path = "./outputs/pairwise_dimension_reduction_beir/results/all-mpnet-base-v2.json"
+attribution_path = "./output_dim_eval/all-mpnet-base-v2__beir.json"

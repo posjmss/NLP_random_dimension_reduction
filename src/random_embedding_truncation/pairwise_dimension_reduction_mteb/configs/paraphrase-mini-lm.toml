@@ -1,0 +1,6 @@
+model_name = "sentence-transformers/paraphrase-MiniLM-L3-v2"
+output_name = "paraphrase-mini-lm"
+cache_dir = "./cache/pairwise_dimension_reduction_mteb/paraphrase-mini-lm"
+result_output_dir = "./outputs/pairwise_dimension_reduction_mteb/"
+output_path = "./outputs/pairwise_dimension_reduction_mteb/results/paraphrase-mini-lm.json"
+attribution_path = "./output_dim_eval/paraphrase-mini-lm__mteb.json"

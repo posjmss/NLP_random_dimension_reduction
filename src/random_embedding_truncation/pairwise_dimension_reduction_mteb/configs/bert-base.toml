@@ -1,0 +1,6 @@
+model_name = "google-bert/bert-base-uncased"
+output_name = "bert-base"
+cache_dir = "./cache/pairwise_dimension_reduction_mteb/bert-base"
+result_output_dir = "./outputs/pairwise_dimension_reduction_mteb/"
+output_path = "./outputs/pairwise_dimension_reduction_mteb/results/bert-base.json"
+attribution_path = "./output_dim_eval/bert-base__mteb.json"
