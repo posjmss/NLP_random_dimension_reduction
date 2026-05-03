@@ -100,14 +100,23 @@ def plot_group(
     y_values = [relative_score for _, relative_score in values]
 
     plt.figure(figsize=(8, 5))
-    plt.bar(x_labels, y_values, color="tab:blue")
+    bars = plt.bar(x_labels, y_values, color="tab:blue")
     plt.axhline(100.0, color="red", linewidth=1.5, label="baseline")
     plt.title(f"{model_name} - {group_name}")
     plt.xlabel("Removed dimensions")
     plt.ylabel("Relative performance (%)")
-    plt.ylim(min(95, min(y_values) - 1), max(105, max(y_values) + 1))
+    plt.ylim(min(95, min(y_values) - 1), max(105, max(y_values) + 3))
     plt.grid(axis="y", alpha=0.25)
     plt.legend()
+    for bar, value in zip(bars, y_values, strict=True):
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            value + 0.35,
+            f"{value:.1f}%",
+            ha="center",
+            va="bottom",
+            fontsize=9,
+        )
     plt.tight_layout()
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
