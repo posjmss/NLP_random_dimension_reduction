@@ -100,6 +100,10 @@ def plot_model(
 ) -> None:
     groups = split_points(dimensions, scores, baseline, epsilon)
 
+    metric_name = "ndcg@10"
+    if metric == "NanoBEIR_mean_cosine_ndcg@5":
+        metric_name = "ndcg@5"
+
     plt.figure(figsize=(12, 6))
     plt.scatter(*groups["degrading"], s=16, color="tab:blue", label="degrading")
     plt.scatter(*groups["improving"], s=16, color="tab:orange", label="improving")
@@ -107,7 +111,7 @@ def plot_model(
     plt.axhline(baseline, color="red", linewidth=1.5, label="baseline")
     plt.title(model_name)
     plt.xlabel("Removed dimension index")
-    plt.ylabel("NDCG@10 score")
+    plt.ylabel(f"{metric_name} score")
     plt.grid(True, alpha=0.25)
     plt.legend()
     plt.tight_layout()
