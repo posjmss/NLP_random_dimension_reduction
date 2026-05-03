@@ -22,6 +22,22 @@ NANOBEIR_TASKS = [
     "NanoTouche2020",
 ]
 
+NANOBEIR_DATASET_ALIASES = {
+    "arguana": "NanoArguAna",
+    "climatefever": "NanoClimateFEVER",
+    "dbpedia": "NanoDBPedia",
+    "fever": "NanoFEVER",
+    "fiqa2018": "NanoFiQA2018",
+    "hotpotqa": "NanoHotpotQA",
+    "msmarco": "NanoMSMARCO",
+    "nfcorpus": "NanoNFCorpus",
+    "nq": "NanoNQ",
+    "quoraretrieval": "NanoQuoraRetrieval",
+    "scidocs": "NanoSCIDOCS",
+    "scifact": "NanoSciFact",
+    "touche2020": "NanoTouche2020",
+}
+
 # read configs
 def read_toml(toml_file: str) -> dict[str, Any]:
     if not os.path.isfile(toml_file):
@@ -144,6 +160,7 @@ def merge_raw_results(input_paths: list[Path]) -> dict[str, dict[str, Any]]:
                 continue
             dimension_metrics = merged.setdefault(str(dimension_key), {})
             for metric_key, value in metrics.items():
+                metric_key = canonicalize_metric_key(metric_key)
                 if metric_key.startswith("NanoBEIR_mean_"):
                     continue
                 if metric_key in dimension_metrics and dimension_metrics[metric_key] != value:
@@ -156,6 +173,15 @@ def merge_raw_results(input_paths: list[Path]) -> dict[str, dict[str, Any]]:
                 dimension_metrics[metric_key] = value
 
     return merged
+
+
+def canonicalize_metric_key(metric_key: str) -> str:
+    for dataset_alias, task_name in NANOBEIR_DATASET_ALIASES.items():
+        prefix = f"{dataset_alias}_"
+        if metric_key.startswith(prefix):
+            return f"{task_name}_{metric_key.removeprefix(prefix)}"
+
+    return metric_key
 
 
 def get_present_tasks(
