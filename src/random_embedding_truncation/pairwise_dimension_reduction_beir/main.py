@@ -49,13 +49,13 @@ NANOBEIR_TASKS = [
 REDUCTION_CASES = [
     ("only_helpful_5pct", "helpful_dimensions", 0.05),
     ("only_helpful_10pct", "helpful_dimensions", 0.10),
-    ("only_helpful_20pct", "helpful_dimensions", 0.20),
+    ("only_helpful_15pct", "helpful_dimensions", 0.15),
     ("only_harmful_5pct", "harmful_dimensions", 0.05),
     ("only_harmful_10pct", "harmful_dimensions", 0.10),
-    ("only_harmful_20pct", "harmful_dimensions", 0.20),
+    ("only_harmful_15pct", "harmful_dimensions", 0.15),
     ("helpful_harmful_2_5pct_each", "helpful_harmful", 0.025),
     ("helpful_harmful_5pct_each", "helpful_harmful", 0.05),
-    ("helpful_harmful_10pct_each", "helpful_harmful", 0.10),
+    ("helpful_harmful_7_5pct_each", "helpful_harmful", 0.075),
 ]
 
 

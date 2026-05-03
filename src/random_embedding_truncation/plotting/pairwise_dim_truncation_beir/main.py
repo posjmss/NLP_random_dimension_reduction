@@ -10,17 +10,17 @@ PLOT_GROUPS = {
     "only_helpful": [
         ("only_helpful_5pct", 0.05),
         ("only_helpful_10pct", 0.10),
-        ("only_helpful_20pct", 0.20),
+        ("only_helpful_15pct", 0.15),
     ],
     "only_harmful": [
         ("only_harmful_5pct", 0.05),
         ("only_harmful_10pct", 0.10),
-        ("only_harmful_20pct", 0.20),
+        ("only_harmful_15pct", 0.15),
     ],
     "helpful_harmful": [
         ("helpful_harmful_2_5pct_each", 0.025),
         ("helpful_harmful_5pct_each", 0.05),
-        ("helpful_harmful_10pct_each", 0.10),
+        ("helpful_harmful_7_5pct_each", 0.075),
     ],
 }
 
