@@ -83,12 +83,6 @@ def case_label(pairwise: dict[str, Any], case_name: str, ratio: float) -> str:
     if not isinstance(case, dict):
         return format_ratio(ratio)
 
-    reduction_plan = case.get("reduction_plan")
-    if isinstance(reduction_plan, dict):
-        actual_ratio = reduction_plan.get("actual_total_ratio")
-        if isinstance(actual_ratio, int | float) and not isinstance(actual_ratio, bool):
-            return f"{actual_ratio * 100:.1f}%"
-
     dropped_count = case.get("num_dropped_dimensions")
     if isinstance(dropped_count, int) and not isinstance(dropped_count, bool):
         return f"{format_ratio(ratio)}\n({dropped_count} dims)"
