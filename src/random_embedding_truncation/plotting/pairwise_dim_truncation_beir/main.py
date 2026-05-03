@@ -7,17 +7,17 @@ import matplotlib.pyplot as plt
 
 DEFAULT_METRIC = "NanoBEIR_mean_cosine_ndcg@10"
 PLOT_GROUPS = {
-    "only_helpful": [
+    "only_improving": [
         ("only_helpful_5pct", 0.05),
         ("only_helpful_10pct", 0.10),
         ("only_helpful_15pct", 0.15),
     ],
-    "only_harmful": [
+    "only_degrading": [
         ("only_harmful_5pct", 0.05),
         ("only_harmful_10pct", 0.10),
         ("only_harmful_15pct", 0.15),
     ],
-    "helpful_harmful": [
+    "improving_degrading": [
         ("helpful_harmful_2_5pct_each", 0.025),
         ("helpful_harmful_5pct_each", 0.05),
         ("helpful_harmful_7_5pct_each", 0.075),
@@ -75,7 +75,17 @@ def format_ratio(ratio: float) -> str:
     return f"{ratio_percent:g}%"
 
 
+def format_mixed_ratio(ratio: float) -> str:
+    total_ratio = ratio * 2
+    each_percent = ratio * 100.0
+    total_percent = total_ratio * 100.0
+    return f"{total_percent:g}%({each_percent:g}+{each_percent:g})"
+
+
 def case_label(pairwise: dict[str, Any], case_name: str, ratio: float) -> str:
+    if case_name.startswith("helpful_harmful_"):
+        return format_mixed_ratio(ratio)
+
     case = pairwise.get(case_name)
     if not isinstance(case, dict):
         return format_ratio(ratio)
