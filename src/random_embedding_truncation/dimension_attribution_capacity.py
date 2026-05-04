@@ -1,3 +1,9 @@
+"""Summarize how many dimensions are labeled helpful, harmful, or neutral.
+
+This file was added to compare attribution capacity across embeddings and
+benchmarks after dimension attribution scores have been computed.
+"""
+
 import json
 from argparse import ArgumentParser
 from dataclasses import dataclass
@@ -12,6 +18,7 @@ class Config:
 
     @classmethod
     def from_args(cls) -> "Config":
+        # Read a directory of attribution-score JSON files and one output path.
         parser = ArgumentParser()
         parser.add_argument(
             "--input-dir",
@@ -35,6 +42,7 @@ def load_json(path: Path) -> Any:
 
 
 def infer_embedding_and_benchmark(path: Path, metadata: dict[str, Any]) -> tuple[str, str]:
+    # Prefer explicit metadata, falling back to the <embedding>__<benchmark> filename.
     embedding = metadata.get("embedding")
     benchmark = metadata.get("benchmark")
     if isinstance(embedding, str) and isinstance(benchmark, str):
@@ -84,6 +92,7 @@ def get_labeled_count(raw: dict[str, Any], label: str) -> int:
 
 
 def summarize_file(path: Path) -> dict[str, Any] | None:
+    # Convert one attribution file into compact count/ratio statistics.
     raw = load_json(path)
     if not isinstance(raw, dict):
         return None
@@ -127,6 +136,7 @@ def min_record(records: list[dict[str, Any]], key: str) -> dict[str, Any]:
 
 
 def build_summary(input_dir: Path, output_path: Path) -> dict[str, Any]:
+    # Aggregate per-file capacity and compute global feasible ratio limits.
     records = []
     skipped_files = []
 

@@ -1,3 +1,9 @@
+"""Plot MTEB pairwise dimension-reduction results as relative bar charts.
+
+This file was added to compare grouped dimension removal cases against each
+model's full-embedding MTEB baseline.
+"""
+
 import json
 from argparse import ArgumentParser
 from pathlib import Path
@@ -61,6 +67,7 @@ def model_name_from_result(path: Path) -> str:
 
 
 def case_score(pairwise: dict[str, Any], case_name: str, metric: str) -> float | None:
+    # Read the selected metric from one pairwise reduction case.
     case = pairwise.get(case_name)
     if not isinstance(case, dict):
         return None
@@ -106,6 +113,7 @@ def plot_group(
     values: list[tuple[str, float]],
     output_path: Path,
 ) -> None:
+    # Draw one bar chart for a reduction group and annotate relative scores.
     x_labels = [label for label, _ in values]
     y_values = [relative_score for _, relative_score in values]
 

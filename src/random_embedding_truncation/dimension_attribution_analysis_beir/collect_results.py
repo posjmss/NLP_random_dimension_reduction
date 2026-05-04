@@ -1,3 +1,9 @@
+"""Collect BEIR one-dimension-drop outputs into a common summary format.
+
+This file was added to merge model-level or dataset-level NanoBEIR result JSONs
+and recompute mean metrics only over datasets available for all dimensions.
+"""
+
 import json
 import os
 import tomllib
@@ -38,7 +44,7 @@ NANOBEIR_DATASET_ALIASES = {
     "touche2020": "NanoTouche2020",
 }
 
-# read configs
+# Read TOML configs without importing the project-wide utility in CLI contexts.
 def read_toml(toml_file: str) -> dict[str, Any]:
     if not os.path.isfile(toml_file):
         raise FileNotFoundError(f"Not Found: {toml_file}")
@@ -130,6 +136,7 @@ def load_json(path: Path) -> Any:
 
 
 def discover_input_paths(primary_input_path: Path, output_name: str) -> list[Path]:
+    # Accept both a single configured result file and sibling dataset-level files.
     paths: list[Path] = []
 
     if primary_input_path.exists():
@@ -161,6 +168,7 @@ def discover_input_paths(primary_input_path: Path, output_name: str) -> list[Pat
 
 
 def merge_raw_results(input_paths: list[Path]) -> dict[str, dict[str, Any]]:
+    # Merge per-dataset files while rejecting conflicting metric values.
     merged: dict[str, dict[str, Any]] = {}
 
     for input_path in input_paths:
@@ -189,6 +197,7 @@ def merge_raw_results(input_paths: list[Path]) -> dict[str, dict[str, Any]]:
 
 
 def canonicalize_metric_key(metric_key: str) -> str:
+    # Convert short NanoBEIR dataset keys to the canonical evaluator task names.
     for dataset_alias, task_name in NANOBEIR_DATASET_ALIASES.items():
         prefix = f"{dataset_alias}_"
         if metric_key.startswith(prefix):
@@ -230,6 +239,7 @@ def filter_metrics_to_tasks(
 def add_mean_metrics(
     dimension_metrics: dict[str, float], task_list: list[str]
 ) -> dict[str, float]:
+    # Add NanoBEIR_mean_* metrics after filtering to common datasets.
     grouped_values: dict[str, list[float]] = {}
 
     for key, value in dimension_metrics.items():
@@ -250,6 +260,7 @@ def add_mean_metrics(
 
 
 def collect_common_dataset_results(config: Config) -> tuple[dict[str, Any], dict[str, Any]]:
+    # Keep only datasets that appear for every collected dimension.
     raw = merge_raw_results(config.input_paths)
 
     raw_dimensions: dict[str, dict[str, Any]] = {

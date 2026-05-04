@@ -1,3 +1,9 @@
+"""Run BEIR one-dimension-drop attribution for one dataset at a time.
+
+This file was added for long jobs where each NanoBEIR dataset is launched and
+saved separately, then collected later.
+"""
+
 from argparse import ArgumentParser
 from dataclasses import dataclass
 from pathlib import Path
@@ -26,6 +32,7 @@ class Config:
 
     @classmethod
     def from_config(cls) -> "Config":
+        # Build a dataset-specific output file from the shared model config.
         parser = ArgumentParser()
         parser.add_argument("--config", type=str, required=True)
         parser.add_argument(
@@ -64,6 +71,7 @@ if __name__ == "__main__":
     dim_size = encoder.get_sentence_embedding_dimension()
     assert isinstance(dim_size, int)
 
+    # Resume from an existing partial result file when a run was interrupted.
     if config.output_path.exists():
         results = sienna.load(config.output_path)
     else:
@@ -72,6 +80,7 @@ if __name__ == "__main__":
     end_index = config.end_index if config.end_index else dim_size
 
     for dim_to_drop in range(config.start_index, end_index):
+        # Drop exactly one dimension and evaluate only the requested dataset.
         print(
             f"{config.dataset_name}: {dim_to_drop} th dimension processing..."
         )

@@ -1,3 +1,9 @@
+"""Evaluate full, untruncated embeddings on the selected NanoBEIR tasks.
+
+This file was added so one-dimension-drop scores can be compared against a
+matching full-embedding baseline for each model.
+"""
+
 import json
 from argparse import ArgumentParser
 from dataclasses import dataclass
@@ -29,6 +35,7 @@ DATASET_NAMES = [
     # "touche2020",     # 12
 ]
 
+# Keep the NanoBEIR metric prefixes aligned with DATASET_NAMES for mean scores.
 NANOBEIR_TASKS = [
     # "NanoClimateFEVER",     # 9
     # "NanoDBPedia",          # 6
@@ -58,6 +65,7 @@ class Config:
 
     @classmethod
     def from_config(cls) -> "Config":
+        # Parse the same model config used by BEIR attribution runs.
         parser = ArgumentParser()
         parser.add_argument("--config", type=str, required=True)
         parser.add_argument(
@@ -106,6 +114,7 @@ class Config:
 
 
 def add_mean_metrics(metrics: dict[str, float]) -> dict[str, float]:
+    # Recompute aggregate NanoBEIR metrics from the selected dataset metrics.
     grouped_values: dict[str, list[float]] = {}
 
     for key, value in metrics.items():
@@ -144,6 +153,7 @@ if __name__ == "__main__":
     if not config.summary_output_path.parent.exists():
         config.summary_output_path.parent.mkdir(parents=True)
 
+    # Run the full model once, without removing any embedding dimension.
     encoder = SentenceTransformer(config.model_name, trust_remote_code=True)
     model = Truncator(
         encoder,
@@ -162,6 +172,7 @@ if __name__ == "__main__":
     )
     result = evaluator(model)
     sienna.save(result, config.output_path)
+    # Save a flat summary so attribution scoring can read a single metric value.
     summary = add_mean_metrics(flatten_numeric_metrics(result))
     with config.summary_output_path.open("w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2, sort_keys=True)

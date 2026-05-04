@@ -1,3 +1,9 @@
+"""Plot one-dimension-drop MTEB scores against the full baseline.
+
+This file was added to visualize which dropped dimensions improve, degrade, or
+leave the selected MTEB metric unchanged.
+"""
+
 import json
 from argparse import ArgumentParser
 from pathlib import Path
@@ -70,6 +76,7 @@ def get_dimension_scores(path: Path, metric: str) -> tuple[list[int], list[float
 def split_points(
     dimensions: list[int], scores: list[float], baseline: float, epsilon: float
 ) -> dict[str, tuple[list[int], list[float]]]:
+    # Group dimensions by whether removing them improves or degrades the metric.
     groups = {
         "degrading": ([], []),
         "improving": ([], []),
@@ -98,6 +105,7 @@ def plot_model(
     output_path: Path,
     epsilon: float,
 ) -> None:
+    # Draw one scatter plot per model with baseline and label-based colors.
     groups = split_points(dimensions, scores, baseline, epsilon)
 
     plt.figure(figsize=(12, 6))

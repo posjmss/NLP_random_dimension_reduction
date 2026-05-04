@@ -1,3 +1,9 @@
+"""Evaluate MTEB performance after dropping groups of attributed dimensions.
+
+This file was added to test whether removing improving/degrading dimensions in
+pairs or groups changes downstream task performance.
+"""
+
 import json
 import math
 from argparse import ArgumentParser
@@ -59,6 +65,7 @@ class Config:
 
     @classmethod
     def from_config(cls) -> "Config":
+        # Load model settings plus the attribution JSON used to choose dimensions.
         parser = ArgumentParser()
         parser.add_argument("--config", type=str, required=True)
         parser.add_argument(
@@ -142,6 +149,7 @@ def get_reduction_plan(
     ratio: float,
     dim_size: int,
 ) -> dict[str, Any]:
+    # Select top helpful/harmful dimensions according to the requested case.
     requested_count = requested_drop_count(dim_size, ratio)
     helpful = [int(dimension) for dimension in attribution.get("helpful_dimensions", [])]
     harmful = [int(dimension) for dimension in attribution.get("harmful_dimensions", [])]
@@ -223,6 +231,7 @@ def collect_case_metrics(
     case_name: str,
     task_list: list[str],
 ) -> dict[str, float]:
+    # Flatten all task outputs for one reduction case into grouped metrics.
     metrics: dict[str, float] = {}
 
     for task in task_list:
@@ -258,6 +267,7 @@ if __name__ == "__main__":
         grouped_results = {}
 
     for case_name, case_kind, ratio in REDUCTION_CASES:
+        # Build a truncated model for this reduction case and evaluate each task.
         reduction_plan = get_reduction_plan(
             attribution, case_name, case_kind, ratio, dim_size
         )

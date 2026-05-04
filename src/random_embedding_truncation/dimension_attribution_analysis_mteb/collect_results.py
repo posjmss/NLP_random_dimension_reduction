@@ -1,3 +1,9 @@
+"""Collect MTEB one-dimension-drop task folders into one summary JSON.
+
+This file was added because MTEB writes nested per-task output folders, while
+the later attribution steps expect one dimension-keyed JSON file.
+"""
+
 import json
 import os
 import re
@@ -154,6 +160,7 @@ def load_json(path: Path) -> Any:
 
 
 def flatten_numeric_metrics(value: Any, prefix: str = "") -> dict[str, float]:
+    # Convert nested MTEB result JSONs into flat numeric metric keys.
     metrics: dict[str, float] = {}
 
     if isinstance(value, bool):
@@ -176,6 +183,7 @@ def flatten_numeric_metrics(value: Any, prefix: str = "") -> dict[str, float]:
 
 
 def collect_task_metrics(task: str, task_output_dir: Path) -> dict[str, float]:
+    # Collect every score JSON under one task output folder.
     metrics: dict[str, float] = {}
 
     for json_path in find_score_jsons(task_output_dir):
@@ -256,6 +264,7 @@ def parse_dimension(task: str, model_slug: str, path: Path) -> int | None:
 
 
 def discover_dimensions(config: Config) -> list[int]:
+    # Discover dimension indices from output folder names.
     dimensions: set[int] = set()
     model_slug = config.model_name.replace("/", "-")
 
@@ -325,6 +334,7 @@ def main() -> None:
         else:
             print(f"  -> dimension {dimension}: no metrics found")
 
+    # Keep mean metrics comparable by using tasks present for every dimension.
     if tasks_by_dimension:
         common_tasks = set.intersection(*tasks_by_dimension.values())
     else:

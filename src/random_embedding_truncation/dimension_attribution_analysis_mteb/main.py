@@ -9,7 +9,8 @@ from sentence_transformers.SentenceTransformer import SentenceTransformer
 from random_embedding_truncation.truncator import Truncator
 from random_embedding_truncation.utils import read_toml
 
-# 12 dataset
+# [customized] Run a smaller selected MTEB classification subset by default;
+# users can still override this with task_list in the config TOML.
 TASK_LIST_CLASSIFICATION = [
     "AmazonCounterfactualClassification",       # 12
     # "AmazonPolarityClassification",             # 6
@@ -33,6 +34,7 @@ class Config:
     use_dot_product: bool
     batch_size: int
     task_list: list[str]
+    # [customized] Allow partial one-dimension-drop runs for resume/testing.
     start_index: int
     end_index: int | None
 
@@ -43,6 +45,7 @@ class Config:
         args = parser.parse_args()
         _config = read_toml(args.config)
 
+        # [customized] Read optional task slicing and batch settings from config.
         task_list = _config.get("task_list", TASK_LIST_CLASSIFICATION)
         return cls(
             _config["model_name"],
@@ -71,9 +74,11 @@ if __name__ == "__main__":
     dim_size = encoder.get_sentence_embedding_dimension()
     assert isinstance(dim_size, int)
 
+    # [customized] Use start_index/end_index so long attribution jobs can be split.
     end_index = config.end_index if config.end_index else dim_size
 
     for dim_to_drop in range(config.start_index, end_index):
+        # [customized] Print progress for long MTEB runs.
         print(f"{dim_to_drop} th dimension processing...")
         dims_to_keep = list(range(dim_size))
         del dims_to_keep[dim_to_drop]

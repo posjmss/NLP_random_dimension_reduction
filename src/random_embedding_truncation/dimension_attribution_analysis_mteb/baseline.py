@@ -1,3 +1,9 @@
+"""Evaluate full, untruncated embeddings on the selected MTEB tasks.
+
+This file was added to produce baseline scores that one-dimension-drop MTEB
+summaries can be compared against.
+"""
+
 import json
 from argparse import ArgumentParser
 from dataclasses import dataclass
@@ -41,6 +47,7 @@ class Config:
 
     @classmethod
     def from_config(cls) -> "Config":
+        # Reuse the attribution config while allowing separate output paths.
         parser = ArgumentParser()
         parser.add_argument("--config", type=str, required=True)
         parser.add_argument(
@@ -95,6 +102,7 @@ if __name__ == "__main__":
     if not config.summary_output_path.parent.exists():
         config.summary_output_path.parent.mkdir(parents=True)
 
+    # Evaluate the original full embedding model once for each selected task.
     encoder = SentenceTransformer(config.model_name)
     model = Truncator(
         encoder,
@@ -116,6 +124,7 @@ if __name__ == "__main__":
         )
         print(f"Saved full-embedding MTEB baseline for {task} to {output_folder}")
 
+    # Flatten the raw task folders into the same metric layout as attribution.
     summary: dict[str, float] = {}
     for task in config.task_list:
         output_folder = config.result_output_dir / f"{task}_{model_slug}_baseline"

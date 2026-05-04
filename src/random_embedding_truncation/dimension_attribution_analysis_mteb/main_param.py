@@ -1,3 +1,9 @@
+"""Run MTEB one-dimension-drop attribution for one task at a time.
+
+This file was added for long runs where each task can be launched separately
+and resumed from its own output folders.
+"""
+
 from argparse import ArgumentParser
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,6 +27,7 @@ class Config:
 
     @classmethod
     def from_config(cls) -> "Config":
+        # Read model settings from TOML and the target task from the CLI.
         parser = ArgumentParser()
         parser.add_argument("--config", type=str, required=True)
         parser.add_argument(
@@ -60,6 +67,7 @@ if __name__ == "__main__":
     end_index = config.end_index if config.end_index else dim_size
 
     for dim_to_drop in range(config.start_index, end_index):
+        # Drop exactly one dimension and evaluate only the requested task.
         print(f"{config.task}: {dim_to_drop} th dimension processing...")
         dims_to_keep = list(range(dim_size))
         del dims_to_keep[dim_to_drop]

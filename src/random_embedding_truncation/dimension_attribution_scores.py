@@ -1,3 +1,9 @@
+"""Score individual dimensions as helpful, harmful, or neutral.
+
+This file was added to turn collected one-dimension-drop summaries into ranked
+dimension attribution lists for later capacity and pairwise experiments.
+"""
+
 import json
 import math
 import re
@@ -23,6 +29,7 @@ class Config:
 
     @classmethod
     def from_args(cls) -> "Config":
+        # Configure which model, benchmark, metric, and baseline define attribution.
         parser = ArgumentParser()
         parser.add_argument(
             "--input",
@@ -108,6 +115,7 @@ def load_json(path: Path) -> Any:
 
 
 def get_input_path(config: Config) -> Path:
+    # Default to the collected summary path for the selected embedding/benchmark.
     if config.input_path is not None:
         return config.input_path
     return config.summary_dir / f"{config.embedding}__{config.benchmark}.json"
@@ -206,6 +214,7 @@ def extract_baseline_score(raw: Any, metric: str, baseline_path: Path) -> float:
 
 
 def get_reference_score(config: Config) -> tuple[float, str, str | None]:
+    # Accept either a numeric baseline score or a JSON file containing the metric.
     if config.baseline_score is not None:
         if not math.isfinite(config.baseline_score):
             raise ValueError("--baseline-score must be finite")
@@ -233,6 +242,7 @@ def classify_dimension(attribution_score: float, epsilon: float) -> str:
 
 
 def build_attribution(config: Config) -> dict[str, Any]:
+    # Compare each dropped-dimension score against the full-embedding baseline.
     input_path = get_input_path(config)
     dimension_to_dropped_score = load_dimension_scores(input_path, config.metric)
     reference_score, reference_kind, baseline_path = get_reference_score(config)
@@ -272,6 +282,7 @@ def build_attribution(config: Config) -> dict[str, Any]:
         int(item["dimension"]) for item in ranked if item["label"] == "neutral"
     ]
 
+    # Store both sorted dimension lists and per-dimension details for downstream use.
     return {
         "metadata": {
             "embedding": config.embedding,

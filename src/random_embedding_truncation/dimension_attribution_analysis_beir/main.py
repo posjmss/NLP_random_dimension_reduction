@@ -12,6 +12,7 @@ from random_embedding_truncation.truncator import Truncator, task_name_to_instru
 from random_embedding_truncation.utils import read_toml
 
 
+# [customized] Evaluate the NanoBEIR subset used for this project by default.
 DATASET_NAMES = [
     # "climatefever",   # 9
     # "dbpedia",        # 6
@@ -90,7 +91,7 @@ if __name__ == "__main__":
         )
         evaluator = NanoBEIREvaluator(
             dataset_names=DATASET_NAMES,
-            # [customized] get ndcg@5, ndcg@10 both
+            # [customized] Collect multiple nDCG cutoffs for BEIR analysis.
             ndcg_at_k=[5, 10, 20],
             score_functions={SimilarityFunction.COSINE.value: cos_sim}
             if not config.use_dot_product

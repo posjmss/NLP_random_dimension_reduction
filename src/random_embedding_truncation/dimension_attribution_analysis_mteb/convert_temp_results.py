@@ -1,3 +1,9 @@
+"""Convert task-level temporary MTEB JSONs into output_summary format.
+
+This file was added to reuse partially generated per-task temp files without
+rerunning expensive MTEB evaluations.
+"""
+
 import json
 from argparse import ArgumentParser
 from dataclasses import dataclass
@@ -102,6 +108,7 @@ def model_slugs(model_name: str) -> list[str]:
 
 
 def discover_temp_tasks(input_dir: Path, model_name: str) -> list[str]:
+    # Infer available tasks from temp filenames for the configured model.
     discovered: set[str] = set()
 
     if not input_dir.exists():
@@ -135,6 +142,7 @@ def find_task_temp_path(input_dir: Path, task: str, model_name: str) -> Path | N
 
 
 def select_primary_score_mapping(split_result: Any) -> Any:
+    # Normalize default/en/language-specific MTEB wrappers to one score object.
     if not isinstance(split_result, dict):
         return split_result
 
@@ -190,6 +198,7 @@ def convert_task_metrics(task: str, raw_result: Any) -> dict[str, float]:
 
 
 def load_task_file(path: Path) -> dict[int, Any]:
+    # Load a temp file keyed by dropped dimension index.
     raw = load_json(path)
     if not isinstance(raw, dict):
         raise ValueError(f"Expected top-level object in {path}")
@@ -222,8 +231,11 @@ def main() -> None:
             missing_tasks.append(task)
             continue
         task_results[task] = load_task_file(path)
-        loaded_files[task] = str(path)
-        print(f"{task}: loaded {len(task_results[task])} dimensions from {path}")
+        loaded_files[task] = str(path.resolve())
+        print(
+            f"{task}: loaded {len(task_results[task])} dimensions "
+            f"from {path.resolve()}"
+        )
 
     if not task_results:
         raise FileNotFoundError(
@@ -231,13 +243,26 @@ def main() -> None:
             f"{config.model_name} in {config.input_dir}"
         )
 
-    dimensions = sorted(
-        {
-            dimension
-            for results_by_dimension in task_results.values()
-            for dimension in results_by_dimension
-        }
-    )
+    # Convert only dimensions shared by every loaded task.
+    dimensions_by_task = {
+        task: set(results_by_dimension)
+        for task, results_by_dimension in task_results.items()
+    }
+    dimensions = sorted(set.intersection(*dimensions_by_task.values()))
+    skipped_dimensions_by_task = {
+        task: sorted(dimensions_for_task - set(dimensions))
+        for task, dimensions_for_task in dimensions_by_task.items()
+    }
+    skipped_dimension_counts = {
+        task: len(skipped_dimensions)
+        for task, skipped_dimensions in skipped_dimensions_by_task.items()
+    }
+    if any(skipped_dimension_counts.values()):
+        print(
+            "Using only dimensions present in every loaded task. "
+            f"Skipped extra dimensions by task: {skipped_dimension_counts}"
+        )
+
     raw_collected: dict[str, dict[str, float]] = {}
     tasks_by_dimension: dict[str, set[str]] = {}
 
@@ -280,6 +305,11 @@ def main() -> None:
         "missing_tasks": missing_tasks,
         "common_tasks": sorted(common_tasks),
         "excluded_tasks": sorted(set(config.task_list) - common_tasks),
+        "input_dimension_counts": {
+            task: len(results_by_dimension)
+            for task, results_by_dimension in task_results.items()
+        },
+        "skipped_dimension_counts": skipped_dimension_counts,
         "mean_metric_scope": "common_tasks_only",
         "source_format": "task_dimension_json",
     }
