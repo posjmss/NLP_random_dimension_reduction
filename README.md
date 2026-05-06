@@ -1,3 +1,8 @@
+# This is a forked version of the original repo. 
+
+Please refer to: https://colab.research.google.com/drive/137LWG1ObCSz7wby0WqTv-AVe8zJtBrpB?usp=sharing to run the project.
+and https://colab.research.google.com/drive/1TmlkYY5k6yEcfh9Q_ercXkQPXpM0m9WE?usp=sharing for fine-tuning the models on FinQAClassification task
+
 # Randomly Removing 50% of Dimensions in Text Embeddings has Minimal Impact on Retrieval and Classification Tasks
 
 This repository is an official code base for our paper, [Randomly Removing 50% of Dimensions in Text Embeddings has Minimal Impact on Retrieval and Classification Tasks](https://arxiv.org/abs/2508.17744) (EMNLP main, 2025).
